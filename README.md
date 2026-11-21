@@ -1,59 +1,38 @@
-# KompasWeb
+# Kompas Kompetencji — front
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.3.0.
+Angular 22. Prowadzi kierownika przez pierwszą ocenę i ocenę okresową w służbie cywilnej krok po kroku,
+z asystentem AI odpowiadającym na podstawie źródeł. Backend: [kk_rag](https://github.com/magdalenasztuk/kk_rag)
+(FastAPI + RAG + Claude).
 
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Uruchomienie
 
 ```bash
-ng generate component component-name
+npm install
+npm start            # http://127.0.0.1:4300, /api → backend na http://127.0.0.1:8000 (proxy.conf.json)
+npm start -- -c mock # bez backendu: dane demo i asystent offline w przeglądarce (localStorage)
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Każda przeglądarka dostaje własną przestrzeń roboczą danych demo (nagłówek `X-Kompas-Workspace`,
+id w localStorage `kompas.workspace`) — usunięcie klucza zaczyna demo od nowa.
+
+## Build i wdrożenie
 
 ```bash
-ng generate --help
+npm run build                 # produkcja: prawdziwy backend pod /api
+npx ng build -c mock          # statyczne demo bez backendu
 ```
 
-## Building
+Na Vercelu `vercel.json` przekierowuje `/api/:path*` na projekt backendu
+(`https://kompas-kompetencji-api.vercel.app`) — przy innej domenie backendu zmień ten adres.
 
-To build the project run:
+## Zgodność z backendem
+
+`npm run parity:trace -- <flow.json> <expected.json>` odtwarza scenariusz żądań na backendzie
+demonstracyjnym frontu; backend porównuje z nim swoje odpowiedzi (`kk_rag/tests/test_parity.py`).
+
+## Testy i lint
 
 ```bash
-ng build
+npx ng test
+npx ng lint
 ```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

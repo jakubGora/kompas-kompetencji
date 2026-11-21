@@ -20,7 +20,7 @@ export class SessionStore {
 
   readonly session = this.state.asReadonly();
   readonly loadFailed = signal(false);
-  readonly isDemo = environment.useMockBackend;
+  readonly isDemo = environment.demoMode;
 
   readonly user = computed(() => this.state()?.user ?? null);
   readonly orgUnit = computed(() => this.state()?.orgUnit ?? null);

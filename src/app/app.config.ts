@@ -16,6 +16,7 @@ import {
   withRouterConfig,
 } from '@angular/router';
 import { mockBackendInterceptor } from '@core/http/mock-backend.interceptor';
+import { workspaceInterceptor } from '@core/http/workspace.interceptor';
 import { PageTitleStrategy } from '@core/layout/page-title.strategy';
 import { SessionStore } from '@core/session/session.store';
 import { routes } from './app.routes';
@@ -31,7 +32,7 @@ export const appConfig: ApplicationConfig = {
       withRouterConfig({ paramsInheritanceStrategy: 'always' }),
       withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' }),
     ),
-    provideHttpClient(withFetch(), withInterceptors([mockBackendInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([workspaceInterceptor, mockBackendInterceptor])),
     { provide: LOCALE_ID, useValue: 'pl' },
     { provide: TitleStrategy, useClass: PageTitleStrategy },
     provideAppInitializer(() => inject(SessionStore).init()),

@@ -13,7 +13,14 @@ import {
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { KnowledgeApi } from '@core/api/knowledge.api';
-import type { AnswerStatus, AssistantAnswer, AssistantContext, AssistantMode, Citation } from '@core/domain/assistant.model';
+import type {
+  AnswerStatus,
+  AssistantAnswer,
+  AssistantContext,
+  AssistantMode,
+  AssistantTurn,
+  Citation,
+} from '@core/domain/assistant.model';
 import { toApiError } from '@core/http/api-error';
 import { DialogService } from '@shared/ui/dialog/dialog.service';
 import { IconComponent } from '@shared/ui/icon/icon.component';
@@ -37,6 +44,7 @@ const STATUS: Readonly<Record<AnswerStatus, string>> = {
 };
 
 const MAX_LENGTH = 500;
+const HISTORY_TURNS = 3;
 let instances = 0;
 
 @Component({
@@ -102,11 +110,12 @@ export class AssistantPanelComponent {
     if (!question || this.pending()) return;
     const id = ++this.nextId;
     const mode = this.mode();
+    const history = this.history();
     this.messages.update((items) => [...items, { id, question, mode }]);
     this.draft.set('');
     this.scrollToEnd();
     try {
-      const answer = await firstValueFrom(this.api.ask({ question, mode, context: this.context() }));
+      const answer = await firstValueFrom(this.api.ask({ question, mode, context: this.context(), history }));
       this.replace(id, { answer });
     } catch (error) {
       this.replace(id, { error: toApiError(error).message });
@@ -139,6 +148,16 @@ export class AssistantPanelComponent {
 
   protected clear(): void {
     this.messages.set([]);
+  }
+
+  private history(): AssistantTurn[] {
+    return this.messages()
+      .filter((message) => message.answer)
+      .slice(-HISTORY_TURNS)
+      .flatMap((message) => [
+        { role: 'user' as const, content: message.question },
+        { role: 'assistant' as const, content: message.answer?.answer ?? '' },
+      ]);
   }
 
   private replace(id: number, change: Partial<Message>): void {

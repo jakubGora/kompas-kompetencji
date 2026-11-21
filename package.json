@@ -11,7 +11,9 @@
     "test:watch": "ng test",
     "lint": "ng lint",
     "format": "prettier --write \"src/**/*.{ts,html,scss,json}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\""
+    "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\"",
+    "export:seed": "esbuild scripts/export-seed.ts --bundle --platform=node --format=esm --tsconfig=tsconfig.json --outfile=.tmp/export-seed.mjs --log-level=warning && node .tmp/export-seed.mjs",
+    "parity:trace": "esbuild scripts/parity-trace.ts --bundle --platform=node --format=esm --tsconfig=tsconfig.json --outfile=.tmp/parity-trace.mjs --log-level=warning && node .tmp/parity-trace.mjs"
   },
   "private": true,
   "packageManager": "npm@11.19.1",

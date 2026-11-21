@@ -57,6 +57,15 @@
               ],
               "outputHashing": "all"
             },
+            "mock": {
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.mock.ts"
+                }
+              ]
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -75,11 +84,15 @@
           "builder": "@angular/build:dev-server",
           "options": {
             "host": "127.0.0.1",
-            "port": 4300
+            "port": 4300,
+            "proxyConfig": "proxy.conf.json"
           },
           "configurations": {
             "production": {
               "buildTarget": "kompas-web:build:production"
+            },
+            "mock": {
+              "buildTarget": "kompas-web:build:mock"
             },
             "development": {
               "buildTarget": "kompas-web:build:development"

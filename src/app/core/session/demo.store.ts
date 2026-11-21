@@ -4,12 +4,12 @@ import { SessionApi } from '@core/api/session.api';
 import { environment } from '@env/environment';
 import { EMPTY } from 'rxjs';
 
-/** Konta i scenariusze demonstracyjne — dostępne tylko z backendem mock. */
+/** Konta i scenariusze demonstracyjne — dostępne tylko w trybie demo. */
 @Injectable({ providedIn: 'root' })
 export class DemoStore {
   private readonly api = inject(SessionApi);
   private readonly resource = rxResource({
-    stream: () => (environment.useMockBackend ? this.api.demo() : EMPTY),
+    stream: () => (environment.demoMode ? this.api.demo() : EMPTY),
   });
 
   readonly info = computed(() => this.resource.value() ?? null);

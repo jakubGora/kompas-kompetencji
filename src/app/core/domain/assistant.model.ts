@@ -40,10 +40,17 @@ export interface AssistantContext {
   readonly stepId?: StepId;
 }
 
+export interface AssistantTurn {
+  readonly role: 'user' | 'assistant';
+  readonly content: string;
+}
+
 export interface AssistantQuestion {
   readonly question: string;
   readonly mode: AssistantMode;
   readonly context?: AssistantContext;
+  /** Poprzednie wymiany w tej rozmowie — pozwalają dopytać („a kto o tym decyduje?”). */
+  readonly history?: readonly AssistantTurn[];
 }
 
 export type AnswerStatus = 'odpowiedz' | 'brak-zrodla' | 'poza-zakresem';
