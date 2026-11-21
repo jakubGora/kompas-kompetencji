@@ -1,0 +1,80 @@
+<aside class="kp-sidebar" aria-label="Nawigacja główna">
+  <a class="kp-sidebar__brand" [routerLink]="session.homeUrl()" aria-label="Kompas Kompetencji — strona główna">
+    <img src="/brand/kompas-logo.svg" alt="" width="166" height="40" />
+  </a>
+
+  <nav class="kp-sidebar__nav" aria-label="Moduły">
+    <ul role="list">
+      @for (item of nav(); track item.link) {
+        @let active = isActive(item);
+        <li>
+          <a class="kp-sidebar__link" [class.kp-sidebar__link--active]="active" [routerLink]="item.link" [attr.aria-current]="active ? 'page' : null">
+            <span class="kp-sidebar__icon"><kp-icon [name]="item.icon" [size]="item.iconSize" /></span>
+            {{ item.label }}
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <button
+    type="button"
+    class="kp-sidebar__account"
+    [cdkMenuTriggerFor]="accountMenu"
+    [cdkMenuPosition]="[{ originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -8 }]"
+    [attr.aria-label]="user().fullName + ', ' + roleLabel() + '. Menu konta'"
+  >
+    <kp-avatar [name]="user().fullName" [src]="user().avatarUrl" [size]="36" />
+    <span class="kp-sidebar__account-text">
+      <span class="kp-sidebar__account-name">{{ user().fullName }}</span>
+      <span class="kp-sidebar__account-role">{{ roleLabel() }}</span>
+    </span>
+  </button>
+</aside>
+
+<ng-template #accountMenu>
+  <div class="kp-menu kp-sidebar__menu" cdkMenu>
+    @if (session.isDemo) {
+      <p class="kp-menu__label" aria-hidden="true">Konto demonstracyjne</p>
+      @for (account of demo.accounts(); track account.id) {
+        <button
+          type="button"
+          class="kp-menu__item"
+          cdkMenuItemRadio
+          [cdkMenuItemChecked]="account.id === user().id"
+          (cdkMenuItemTriggered)="switchTo(account.id)"
+        >
+          <span>
+            {{ account.fullName }}
+            <span class="kp-menu__item-meta">{{ account.hint }}</span>
+          </span>
+        </button>
+      }
+      <div class="kp-menu__separator" role="separator"></div>
+      <p class="kp-menu__label" aria-hidden="true">Scenariusz danych · dzień demo {{ session.today() | kpDate }}</p>
+      @for (scenario of demo.scenarios(); track scenario.id) {
+        <button
+          type="button"
+          class="kp-menu__item"
+          cdkMenuItemRadio
+          [cdkMenuItemChecked]="scenario.id === demo.scenarioId()"
+          (cdkMenuItemTriggered)="loadScenario(scenario.id)"
+        >
+          <span>
+            {{ scenario.label }}
+            <span class="kp-menu__item-meta">{{ scenario.description }}</span>
+          </span>
+        </button>
+      }
+      <button type="button" class="kp-menu__item" cdkMenuItem (cdkMenuItemTriggered)="reset()">
+        <kp-icon name="reset" [size]="16" />
+        Przywróć dane startowe
+      </button>
+      <div class="kp-menu__separator" role="separator"></div>
+    }
+    <a class="kp-menu__item" cdkMenuItem routerLink="/baza-wiedzy">
+      <kp-icon name="help" [size]="16" />
+      Pomoc i źródła
+    </a>
+  </div>
+</ng-template>

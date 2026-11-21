@@ -1,0 +1,122 @@
+<kp-step-frame stepId="stanowisko" completeLabel="Zatwierdź arkusz i przejdź dalej">
+  <article class="kp-card kp-osp-document" aria-labelledby="kp-osp-document">
+    <span class="kp-tag">Przypisany dokument</span>
+    <div class="kp-osp-document__row">
+      <h2 class="kp-osp-document__name" id="kp-osp-document">{{ position().documentName }}</h2>
+      @if (editable()) {
+        <button type="button" class="kp-text-link kp-text-link--sm" [disabled]="analyzing()" (click)="changeDocument()">
+          Zmień przypisany dokument
+        </button>
+      }
+    </div>
+    <p class="kp-osp-document__meta">
+      DOCX •
+      {{ position().fromOrganizer ? 'ekstrakt demonstracyjny do potwierdzenia przez oceniającego' : 'dane demonstracyjne do potwierdzenia przez oceniającego' }}
+    </p>
+  </article>
+
+  <article class="kp-card kp-osp" aria-labelledby="kp-osp-employee">
+    <header class="kp-osp__header">
+      <div>
+        <h2 class="kp-osp__name" id="kp-osp-employee">{{ c().employee.fullName }}</h2>
+        <p class="kp-osp__meta">{{ position().title }} {{ position().code }}</p>
+        <p class="kp-osp__meta kp-osp__unit">{{ position().division }}, {{ position().department }}</p>
+      </div>
+
+      <div class="kp-osp__sheet" aria-live="polite">
+        @if (variant(); as shown) {
+          <p class="kp-osp__sheet-name">Arkusz {{ shown }}</p>
+          @if (editable()) {
+            <button type="button" class="kp-text-link kp-text-link--sm" [attr.aria-label]="'Zmień arkusz ' + shown" (click)="changeSheet()">
+              Zmień
+            </button>
+          }
+        } @else if (analyzing()) {
+          <p class="kp-osp__sheet-pending">Asystent czyta OSP…</p>
+        } @else {
+          <p class="kp-osp__sheet-name">Arkusz —</p>
+          @if (editable()) {
+            <button type="button" class="kp-text-link kp-text-link--sm" (click)="changeSheet()">Wybierz</button>
+          }
+        }
+      </div>
+    </header>
+
+    @if (deviates()) {
+      <div class="kp-status-note kp-status-note--warning kp-osp__deviation">
+        <p class="kp-status-note__title">Inny arkusz niż wynika z OSP — rekomendacja asystenta: arkusz {{ analysis()?.recommendedVariant }}</p>
+        <p class="kp-status-note__text">Uzasadnienie: {{ review().overrideReason }}</p>
+      </div>
+    }
+
+    <p class="kp-overline kp-osp__label">Cel stanowiska</p>
+    <p class="kp-osp__purpose">{{ position().purpose }}</p>
+
+    <section class="kp-osp__tasks" aria-labelledby="kp-osp-tasks">
+      <div class="kp-osp__tasks-header">
+        <h3 class="kp-osp__tasks-title" id="kp-osp-tasks">Zadania pracownika</h3>
+        <p class="kp-osp__tasks-count">{{ dominant().length }} dominujące · {{ other().length }} pozostałe</p>
+      </div>
+      <ol class="kp-osp__task-list">
+        @for (task of dominant(); track task.id) {
+          <li>
+            <span class="kp-osp__task-no">{{ task.no }}</span>
+            <span>{{ task.text }}</span>
+          </li>
+        }
+      </ol>
+
+      @if (other().length > 0) {
+        <details class="kp-osp__more">
+          <summary>Pozostałe zadania ({{ other().length }})</summary>
+          <ol class="kp-osp__task-list">
+            @for (task of other(); track task.id) {
+              <li>
+                <span class="kp-osp__task-no">{{ task.no }}</span>
+                <span>{{ task.text }}</span>
+              </li>
+            }
+          </ol>
+        </details>
+      }
+
+      <details class="kp-osp__more">
+        <summary>Podległość, uprawnienia i kompetencje z OSP</summary>
+        <dl class="kp-dl kp-osp__facts">
+          <dt>Podległość</dt>
+          <dd>
+            {{ position().supervisedBy.direct }}
+            @if (position().supervisedBy.indirect; as indirect) {
+              <span class="kp-muted"> · pośrednio: {{ indirect }}</span>
+            }
+          </dd>
+          <dt>Kierowanie</dt>
+          <dd>
+            {{ subordinatesLabel[position().subordinates.range] }}
+            <span class="kp-muted"> · „{{ position().subordinates.quote }}”</span>
+          </dd>
+          <dt>Uprawnienia</dt>
+          <dd>
+            <ul class="kp-osp__bullets">
+              @for (item of position().authorizations; track $index) {
+                <li>{{ item }}</li>
+              }
+            </ul>
+          </dd>
+          <dt>Samodzielność</dt>
+          <dd>{{ position().independence }}</dd>
+          <dt>Kompetencje miękkie</dt>
+          <dd class="kp-cluster">
+            @for (item of position().softCompetencies; track item) {
+              <span class="kp-chip">{{ item }}</span>
+            }
+          </dd>
+        </dl>
+      </details>
+    </section>
+  </article>
+
+  @if (editable()) {
+    <button stepActions type="button" kpButton="secondary" [disabled]="analyzing()" (click)="changeSheet()">Zmień arkusz</button>
+  }
+</kp-step-frame>

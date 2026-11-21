@@ -1,0 +1,155 @@
+@if (detail.isLoading() && !data()) {
+  <kp-page-skeleton label="Wczytywanie kandydata…" />
+} @else if (detail.error() && !data()) {
+  <div class="kp-card">
+    @if (errorStatus() === 404) {
+      <kp-empty-state icon="search" heading="Nie znaleźliśmy kandydata" description="Zgłoszenie mogło zostać wycofane.">
+        <a kpButton="secondary" icon="arrow-left" routerLink="/rekrutacje">Wróć do naboru</a>
+      </kp-empty-state>
+    } @else {
+      <kp-empty-state icon="alert-circle" heading="Nie udało się wczytać kandydata">
+        <button type="button" kpButton icon="reset" (click)="detail.reload()">Spróbuj ponownie</button>
+      </kp-empty-state>
+    }
+  </div>
+} @else if (data(); as d) {
+  <header class="kp-card kp-candidate__header">
+    <kp-avatar [name]="d.candidate.fullName" [size]="56" />
+    <div class="kp-candidate__who">
+      <p class="kp-eyebrow">{{ d.recruitment.reference }} · {{ d.recruitment.title }}</p>
+      <h1 class="kp-candidate__name">{{ d.candidate.fullName }}</h1>
+      <p class="kp-muted kp-text-sm">
+        Zgłoszenie {{ d.candidate.appliedAt | kpDate }} · {{ d.candidate.statusNote }}
+      </p>
+      @if (d.candidate.nextEvent; as event) {
+        <p class="kp-candidate__event"><kp-icon name="calendar" [size]="16" /> {{ event.label }} — {{ event.at | kpDate: 'datetime' }}</p>
+      }
+    </div>
+    <div class="kp-candidate__stage">
+      <label class="kp-candidate__stage-label" for="kp-candidate-stage">Etap naboru</label>
+      <select
+        id="kp-candidate-stage"
+        class="kp-select kp-input--sm"
+        [disabled]="savingStage()"
+        (change)="changeStage($any($event.target).value)"
+      >
+        @for (stage of stages; track stage.id) {
+          <option [value]="stage.id" [selected]="stage.id === d.candidate.stage">{{ stage.label }}</option>
+        }
+      </select>
+    </div>
+  </header>
+
+  <div class="kp-candidate__layout">
+    <div class="kp-stack">
+      <section class="kp-card" aria-labelledby="kp-evidence-title">
+        <div class="kp-card__header">
+          <div>
+            <h2 class="kp-card__title" id="kp-evidence-title">Dowody kompetencji</h2>
+            <p class="kp-card__subtitle">
+              Komisja zaznacza ocenę opisową przy każdej kompetencji z ogłoszenia.
+              @if (withoutEvidence() > 0) {
+                {{ withoutEvidence() }} bez dowodów — zaplanuj pytania na rozmowę.
+              }
+            </p>
+          </div>
+        </div>
+
+        <ul class="kp-evidence">
+          @for (item of competencies(); track item.id) {
+            <li class="kp-evidence__item" [class.kp-evidence__item--missing]="item.evidence.length === 0">
+              <div class="kp-evidence__head">
+                <h3 class="kp-evidence__name" [id]="'kp-competency-' + item.id">{{ item.name }}</h3>
+                @if (item.rating; as rating) {
+                  <kp-badge [tone]="ratingInfo[rating].tone" [dot]="true">{{ ratingInfo[rating].label }}</kp-badge>
+                }
+              </div>
+
+              @for (evidence of item.evidence; track $index) {
+                <blockquote class="kp-quote kp-evidence__quote">
+                  {{ evidence.evidence }}
+                  <cite>{{ evidence.source }}</cite>
+                </blockquote>
+              } @empty {
+                <p class="kp-evidence__missing"><kp-icon name="alert" [size]="16" /> Brak dowodu w materiałach kandydata.</p>
+              }
+
+              @for (question of item.questions; track question) {
+                <p class="kp-evidence__question"><kp-icon name="help" [size]="16" /> <span><strong>Pytanie pogłębiające:</strong> {{ question }}</span></p>
+              }
+
+              <div class="kp-evidence__rating" role="radiogroup" [attr.aria-labelledby]="'kp-competency-' + item.id">
+                @for (option of ratings; track option.id) {
+                  <label class="kp-evidence__option" [attr.data-tone]="option.tone">
+                    <input
+                      type="radio"
+                      [name]="'kp-rating-' + item.id"
+                      [checked]="item.rating === option.id"
+                      [disabled]="item.evidence.length === 0"
+                      (change)="rate(item.id, option.id)"
+                    />
+                    {{ option.label }}
+                  </label>
+                }
+                @if (item.rating) {
+                  <button type="button" class="kp-link-button" (click)="rate(item.id, null)">Wyczyść</button>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="kp-card" aria-labelledby="kp-note-title">
+        <div class="kp-card__header">
+          <h2 class="kp-card__title" id="kp-note-title">Notatka komisji</h2>
+          <kp-save-status [state]="noteState()" (retry)="retryNote()" />
+        </div>
+        <label class="kp-visually-hidden" for="kp-committee-note">Notatka komisji</label>
+        <textarea
+          id="kp-committee-note"
+          class="kp-textarea"
+          rows="4"
+          [attr.maxlength]="noteLimit"
+          placeholder="Ustalenia komisji, informacje do uzupełnienia, uwagi do protokołu."
+          [value]="note()"
+          (input)="onNote($any($event.target).value)"
+        ></textarea>
+        <p class="kp-candidate__counter kp-tabular">{{ note().length }}/{{ noteLimit }}</p>
+      </section>
+    </div>
+
+    <aside class="kp-stack">
+      <section class="kp-card" aria-labelledby="kp-formal-title">
+        <h2 class="kp-card__title" id="kp-formal-title">Wymagania formalne</h2>
+        @if (formal(); as status) {
+          <kp-badge class="kp-candidate__formal-badge" [tone]="formalInfo[status].tone" [dot]="true">{{ formalInfo[status].label }}</kp-badge>
+        }
+        <ul class="kp-formal">
+          @for (requirement of d.candidate.formalRequirements; track requirement.label) {
+            <li class="kp-formal__item" [attr.data-met]="requirement.met">
+              <kp-icon [name]="requirement.met === true ? 'check-circle' : requirement.met === false ? 'x-circle' : 'help'" [size]="18" />
+              <span>
+                {{ requirement.label }}
+                <span class="kp-visually-hidden">: {{ requirement.met === true ? 'spełnione' : requirement.met === false ? 'niespełnione' : 'do weryfikacji' }}</span>
+              </span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="kp-card" aria-labelledby="kp-materials-title">
+        <h2 class="kp-card__title" id="kp-materials-title">Materiały</h2>
+        <ul class="kp-materials">
+          @for (material of d.candidate.materials; track material) {
+            <li><kp-icon name="file" [size]="16" /> {{ material }}</li>
+          }
+        </ul>
+      </section>
+
+      <kp-callout tone="neutral" icon="scale" heading="Bez automatycznych decyzji">
+        Oceny komisji są opisowe i nie sumują się w wynik. Kompas nie porównuje kandydatów ani nie analizuje emocji czy wizerunku.
+      </kp-callout>
+    </aside>
+  </div>
+}

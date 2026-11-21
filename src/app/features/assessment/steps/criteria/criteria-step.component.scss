@@ -1,0 +1,81 @@
+// Projekt 04 „Wybierz kryteria oceny”: obowiązkowe (348 px) i dodatkowe obok siebie.
+.kp-criteria {
+  display: grid;
+  grid-template-columns: minmax(0, 348fr) minmax(0, 620fr);
+  gap: var(--kp-space-5);
+
+  @media (max-width: 1100px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.kp-criteria__card {
+  display: flex;
+  flex-direction: column;
+  padding: 21px var(--kp-space-5) 26px;
+}
+
+.kp-criteria__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--kp-space-4);
+  margin-bottom: var(--kp-space-5);
+  padding-inline: var(--kp-space-1);
+}
+
+.kp-criteria__title {
+  margin: 0;
+  font-size: var(--kp-font-size-2xl);
+  font-weight: var(--kp-font-weight-medium);
+  line-height: 1.5;
+}
+
+.kp-criteria__subtitle {
+  margin: 0;
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-3xs);
+}
+
+.kp-criteria__count {
+  margin: 6px 0 0;
+  font-size: var(--kp-font-size-xs);
+  white-space: nowrap;
+}
+
+.kp-criteria__list {
+  display: grid;
+  gap: var(--kp-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  .kp-option {
+    padding-inline: 17px var(--kp-space-4);
+  }
+
+  &--compact {
+    gap: 10px;
+
+    .kp-option {
+      min-height: 51px;
+    }
+  }
+}
+
+.kp-option__body {
+  cursor: pointer;
+}
+
+.kp-criteria__empty {
+  padding: var(--kp-space-4);
+  border-radius: var(--kp-radius-md);
+  background: var(--kp-color-surface-lilac);
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-xs);
+}
+
+.kp-criteria__add {
+  width: 100%;
+  margin-top: 15px;
+}

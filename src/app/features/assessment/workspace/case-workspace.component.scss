@@ -1,0 +1,82 @@
+@use 'mixins' as m;
+
+// Projekt: nagłówek → pasek kroków (21 px niżej) → obszar pracy 988 px + asystent 312 px (57 px pod etykietami).
+:host {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.kp-case__header {
+  margin-bottom: 21px;
+}
+
+.kp-case__aside {
+  display: grid;
+  justify-items: end;
+  gap: var(--kp-space-2);
+  max-width: 520px;
+}
+
+.kp-case__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--kp-space-1) var(--kp-space-4);
+}
+
+.kp-case__stepper {
+  margin-bottom: 55px;
+}
+
+// Dolny odstęp strony daje pasek akcji kroku (przyklejony do dołu), więc obszar pracy wchodzi w padding powłoki.
+.kp-case__body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--kp-space-6);
+  margin-bottom: calc(-1 * var(--kp-space-6));
+
+  &--docked {
+    grid-template-columns: minmax(0, 1fr) var(--kp-assistant-width);
+  }
+}
+
+.kp-case__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.kp-case__assistant {
+  position: sticky;
+  top: var(--kp-space-6);
+  align-self: start;
+  height: clamp(520px, calc(100dvh - 347px), 760px);
+}
+
+@include m.down(md) {
+  .kp-case__aside {
+    justify-items: start;
+  }
+
+  .kp-case__links {
+    justify-content: flex-start;
+  }
+
+  .kp-case__stepper {
+    margin-bottom: var(--kp-space-8);
+  }
+}
+
+@media print {
+  .kp-case__header,
+  .kp-case__stepper {
+    display: none;
+  }
+
+  .kp-case__body--docked {
+    grid-template-columns: 1fr;
+  }
+}

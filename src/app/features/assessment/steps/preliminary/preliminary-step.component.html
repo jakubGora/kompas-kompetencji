@@ -1,0 +1,168 @@
+<ng-template kpStepHeaderAside>
+  @if (completedAt() && c().preliminary.employeeAcknowledgedAt; as signedAt) {
+    <div class="kp-status-note kp-status-note--success kp-preliminary__signed">
+      <p class="kp-status-note__title">
+        ✓ Podpisano {{ signedAt | kpDate }}
+        @if (!isFirst()) {
+          • OD = {{ signedAt | kpDate }}
+        }
+        • kopia dla {{ noun().genitive }} i do akt
+      </p>
+      <p class="kp-status-note__text">
+        Rozmowa {{ meetingOnTime() ? 'przed terminem' : 'po terminie' }} {{ deadlines().preliminaryDueDate | kpDate }}. Dokument i podpis odnotowano w historii.
+      </p>
+    </div>
+  } @else {
+    <div class="kp-status-note kp-preliminary__signed">
+      <p class="kp-status-note__title">{{ isFirst() ? 'Ustalenia' : 'Część I' }} do podpisu • rozmowa do {{ deadlines().preliminaryDueDate | kpDate }}</p>
+      <p class="kp-status-note__text">
+        @if (isFirst()) {
+          Po rozmowie odnotuj podpis {{ noun().genitive }} pod ustaleniami i terminem sprawozdania.
+        } @else {
+          Po rozmowie odnotuj podpis {{ noun().genitive }} — data podpisu rozpocznie okres oceny („OD”).
+        }
+      </p>
+    </div>
+  }
+</ng-template>
+
+<kp-step-frame
+  stepId="rozmowa-wstepna"
+  [completeLabel]="isFirst() ? 'Podpisz ustalenia i przejdź dalej' : 'Podpisz część I i przejdź dalej'"
+  nextLabel="Przejdź do obserwacji"
+  [completedNote]="false"
+  [confirmComplete]="sign"
+>
+  <div class="kp-preliminary">
+    <section class="kp-card kp-preliminary__card" aria-labelledby="kp-topics-title">
+      <h2 class="kp-preliminary__title kp-preliminary__title--topics" id="kp-topics-title">Tematy omówione z {{ noun().instrumental }}</h2>
+      <ul class="kp-preliminary__list">
+        @for (topic of topics(); track topic.id) {
+          <li class="kp-option kp-option--mandatory">
+            <input
+              type="checkbox"
+              class="kp-check"
+              [id]="'kp-topic-' + topic.id"
+              [checked]="topicStatus(topic) !== null"
+              [disabled]="!editable()"
+              (change)="toggleTopic(topic, $event)"
+            />
+            <label class="kp-option__body" [for]="'kp-topic-' + topic.id">
+              <span class="kp-option__title">{{ topic.shortLabel }}</span>
+              @if (topicStatus(topic) === 'nie-dotyczy') {
+                <span class="kp-option__text">Nie dotyczy</span>
+              }
+            </label>
+            <button
+              type="button"
+              class="kp-text-link kp-text-link--sm kp-text-link--plain"
+              [attr.aria-label]="(editable() ? 'Edytuj temat: ' : 'Szczegóły tematu: ') + topic.shortLabel"
+              (click)="editTopic(topic)"
+            >
+              {{ editable() ? 'Edytuj' : 'Szczegóły' }}
+            </button>
+          </li>
+        }
+      </ul>
+      <label class="kp-visually-hidden" for="kp-preliminary-notes">Notatka z rozmowy</label>
+      <textarea
+        id="kp-preliminary-notes"
+        class="kp-textarea kp-preliminary__notes"
+        placeholder="Miejsce na Twoją notatkę"
+        [formField]="f.notes"
+      ></textarea>
+    </section>
+
+    <section class="kp-card kp-preliminary__card" aria-labelledby="kp-expectations-title">
+      <h2 class="kp-preliminary__title" id="kp-expectations-title">Oczekiwania</h2>
+      <ul class="kp-preliminary__list kp-preliminary__list--scroll" [attr.aria-busy]="store.busy() === 'draft-expectations'">
+        @for (row of expectations(); track row.id) {
+          <li class="kp-option kp-preliminary__expectation" [class.kp-option--selected]="row.agreed">
+            <input
+              type="checkbox"
+              class="kp-check"
+              [id]="'kp-expectation-' + row.id"
+              [checked]="row.agreed"
+              [disabled]="!editable()"
+              (change)="toggleExpectation(row, $event)"
+            />
+            <label class="kp-option__body" [for]="'kp-expectation-' + row.id">
+              <span class="kp-option__title">{{ row.label }}</span>
+              <span class="kp-option__text">
+                @if (row.text) {
+                  {{ row.text }}
+                } @else if (store.busy() === 'draft-expectations') {
+                  Asystent szkicuje oczekiwanie…
+                } @else {
+                  Brak opisu — dodaj oczekiwanie.
+                }
+              </span>
+            </label>
+            @if (editable()) {
+              <button
+                type="button"
+                class="kp-text-link kp-text-link--sm kp-text-link--plain"
+                [attr.aria-label]="'Edytuj oczekiwanie: ' + row.label"
+                (click)="editExpectation(row)"
+              >
+                Edytuj
+              </button>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+  </div>
+
+  <section class="kp-card kp-preliminary__terms" aria-label="Termin i cele">
+    @if (isFirst()) {
+      <div class="kp-preliminary__term">
+        <label class="kp-preliminary__term-label" for="kp-report-from">Termin sprawozdania od</label>
+        <input id="kp-report-from" type="date" class="kp-input" [formField]="f.reportFrom" />
+      </div>
+      <div class="kp-preliminary__term">
+        <label class="kp-preliminary__term-label" for="kp-report-to">do</label>
+        <input id="kp-report-to" type="date" class="kp-input" [formField]="f.reportTo" />
+      </div>
+      @if (f.reportFrom().touched() && f.reportFrom().errors()[0]; as problem) {
+        <p class="kp-preliminary__error" role="alert">{{ problem.message }}</p>
+      } @else if (f.reportTo().touched() && f.reportTo().errors()[0]; as problem) {
+        <p class="kp-preliminary__error" role="alert">{{ problem.message }}</p>
+      }
+    } @else {
+      <div class="kp-preliminary__term">
+        <label class="kp-preliminary__term-label" for="kp-due-date">Termin sporządzenia oceny</label>
+        <input
+          id="kp-due-date"
+          type="date"
+          class="kp-input"
+          [max]="deadlines().dueDate"
+          [attr.aria-describedby]="'kp-due-hint'"
+          [formField]="f.assessmentDueDate"
+        />
+        <span class="kp-visually-hidden" id="kp-due-hint">Najpóźniej {{ deadlines().dueDate | kpDate }} — {{ deadlines().basis }}</span>
+      </div>
+      <div class="kp-preliminary__goals">
+        <p class="kp-preliminary__term-label">Cele na okres</p>
+        @if (goals().length > 0) {
+          <p class="kp-preliminary__goals-text">
+            @for (goal of goals(); track goal.id; let last = $last) {
+              {{ goal.text }}{{ last ? '' : ' • ' }}
+            }
+          </p>
+        } @else if (c().preliminary.topics['cele'] === 'nie-dotyczy') {
+          <p class="kp-preliminary__goals-text kp-muted">Nie dotyczy</p>
+        } @else {
+          <p class="kp-preliminary__goals-text kp-muted">Nie wyznaczono — dodasz je w temacie „Cele, jeśli zasadne”.</p>
+        }
+      </div>
+      @if (f.assessmentDueDate().touched() && f.assessmentDueDate().errors()[0]; as problem) {
+        <p class="kp-preliminary__error" role="alert">{{ problem.message }}</p>
+      }
+    }
+  </section>
+
+  <button stepActions type="button" kpButton="secondary" [loading]="store.busy() === 'document'" (click)="downloadPartOne()">
+    {{ isFirst() ? 'Pobierz ustalenia (PDF)' : 'Pobierz część I (PDF)' }}
+  </button>
+</kp-step-frame>

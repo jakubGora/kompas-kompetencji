@@ -1,0 +1,136 @@
+@if (detail.isLoading() && !data()) {
+  <kp-page-skeleton label="Wczytywanie kartoteki pracownika…" />
+} @else if (detail.error()) {
+  <div class="kp-card">
+    @switch (errorStatus()) {
+      @case (403) {
+        <kp-empty-state icon="lock" heading="Brak dostępu do kartoteki" description="Dane pracownika widzi bezpośredni przełożony i kadry.">
+          <a kpButton="secondary" icon="arrow-left" routerLink="/pracownicy">Wróć do listy</a>
+        </kp-empty-state>
+      }
+      @case (404) {
+        <kp-empty-state icon="search" heading="Nie znaleźliśmy tej osoby" description="Link mógł się zdezaktualizować.">
+          <a kpButton="secondary" icon="arrow-left" routerLink="/pracownicy">Wróć do listy</a>
+        </kp-empty-state>
+      }
+      @default {
+        <kp-empty-state icon="alert-circle" heading="Nie udało się wczytać kartoteki">
+          <button type="button" kpButton icon="reset" (click)="detail.reload()">Spróbuj ponownie</button>
+        </kp-empty-state>
+      }
+    }
+  </div>
+} @else if (data(); as d) {
+  <header class="kp-card kp-person">
+    <kp-avatar [name]="d.employee.fullName" [size]="64" />
+    <div class="kp-person__main">
+      <p class="kp-eyebrow">{{ statusLabel[d.employee.status] }}</p>
+      <h1 class="kp-person__name">{{ d.employee.fullName }}</h1>
+      <p class="kp-person__meta">{{ d.employee.positionTitle }} · {{ d.employee.orgUnitName }}</p>
+      <dl class="kp-person__facts">
+        <div>
+          <dt>Zatrudnienie od</dt>
+          <dd>{{ d.employee.employedSince | kpDate }}</dd>
+        </div>
+        <div>
+          <dt>Bezpośredni przełożony</dt>
+          <dd>{{ d.employee.supervisor.fullName }}</dd>
+        </div>
+        <div>
+          <dt>Kolejna ocena</dt>
+          <dd>{{ pathLabel[d.employee.suggestedPath] }}</dd>
+        </div>
+      </dl>
+    </div>
+    <div class="kp-person__actions">
+      @if (d.employee.activeCaseId) {
+        <a kpButton iconEnd="arrow-right" [routerLink]="['/oceny', d.employee.activeCaseId]">Przejdź do oceny w toku</a>
+      } @else if (canStart()) {
+        <button type="button" kpButton icon="play" (click)="start()">Uruchom {{ pathLabel[d.employee.suggestedPath].toLowerCase() }}</button>
+      }
+      @if (d.employee.nextAction; as next) {
+        <p class="kp-person__next">
+          {{ next.label }}
+          @if (next.dueDate) {
+            <kp-due-chip [date]="next.dueDate" />
+          }
+        </p>
+      }
+    </div>
+  </header>
+
+  <div class="kp-person__grid">
+    <section class="kp-card kp-card--flush" aria-labelledby="kp-person-cases">
+      <div class="kp-card__header kp-person__section-header">
+        <div>
+          <h2 class="kp-card__title" id="kp-person-cases">Oceny</h2>
+          <p class="kp-card__subtitle">Bieżące i archiwalne oceny dostępne dla Twojej roli.</p>
+        </div>
+      </div>
+      @if (d.cases.length === 0) {
+        <kp-empty-state [compact]="true" icon="clipboard-check" heading="Brak ocen w systemie" description="Poprzednie oceny sprzed wdrożenia narzędzia znajdują się w aktach osobowych." />
+      } @else {
+        <ul class="kp-person__cases">
+          @for (summary of d.cases; track summary.id) {
+            <li class="kp-person__case">
+              <div class="kp-person__case-main">
+                <a class="kp-person__case-link" [routerLink]="['/oceny', summary.id]">{{ kindLabel(summary) }}</a>
+                <p class="kp-person__case-meta">
+                  Oceniający: {{ summary.evaluator.fullName }} · termin {{ summary.dueDate | kpDate }}
+                </p>
+              </div>
+              <div class="kp-cluster">
+                @if (summary.status === 'zakonczona') {
+                  @if (summary.outcome; as outcome) {
+                    <kp-badge [tone]="outcomeTone[outcome]" [dot]="true">{{ outcome }} · {{ summary.mean | kpScore }}</kp-badge>
+                  }
+                  <span class="kp-person__case-meta">zapoznanie {{ summary.completedAt | kpDate }}</span>
+                } @else {
+                  <kp-badge tone="primary">krok {{ summary.stepIndex }}/{{ summary.stepCount }}: {{ summary.currentStepLabel }}</kp-badge>
+                  @for (reason of summary.attention; track reason) {
+                    <kp-badge [tone]="attention[reason].tone">{{ attention[reason].label }}</kp-badge>
+                  }
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <aside class="kp-stack">
+      @if (d.employee.previousAssessment; as previous) {
+        <section class="kp-card" aria-labelledby="kp-person-previous">
+          <h2 class="kp-card__title" id="kp-person-previous">Poprzednia ocena</h2>
+          <dl class="kp-dl kp-person__dl">
+            <dt>Wynik</dt>
+            <dd><kp-badge [tone]="outcomeTone[previous.outcome]" [dot]="true">{{ previous.outcome }}</kp-badge></dd>
+            <dt>Sporządzona</dt>
+            <dd>{{ previous.draftedAt | kpDate }}</dd>
+            <dt>Zapoznanie</dt>
+            <dd>{{ previous.acknowledgedAt | kpDate }}</dd>
+          </dl>
+          <p class="kp-legal">Kolejna ocena okresowa — 24 miesiące od poprzedniej (art. 81 ust. 1 ustawy o służbie cywilnej).</p>
+        </section>
+      }
+
+      <section class="kp-card" aria-labelledby="kp-person-position">
+        <h2 class="kp-card__title" id="kp-person-position">Opis stanowiska</h2>
+        <p class="kp-card__subtitle">{{ d.position.code }} · {{ d.position.documentName }}</p>
+        <p class="kp-text-sm kp-person__purpose">{{ d.position.purpose }}</p>
+        <h3 class="kp-person__subheading">Zadania dominujące</h3>
+        <ol class="kp-person__tasks">
+          @for (task of dominantTasks(); track task.id) {
+            <li>{{ task.text }}</li>
+          }
+        </ol>
+        @if (otherTasksCount() > 0) {
+          <p class="kp-muted kp-text-xs">+ {{ otherTasksCount() }} pozostałych zadań w OSP</p>
+        }
+        @if (!d.position.fromOrganizer) {
+          <kp-callout tone="neutral" icon="info">Opis stanowiska demonstracyjny — dane fikcyjne.</kp-callout>
+        }
+      </section>
+    </aside>
+  </div>
+}

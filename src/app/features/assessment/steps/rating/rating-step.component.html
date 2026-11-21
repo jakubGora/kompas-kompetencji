@@ -1,0 +1,111 @@
+<kp-step-frame stepId="ocena" [completable]="false" [draftable]="true">
+  <nav class="kp-rating-nav" aria-label="Kryteria oceny">
+    <ol>
+      @for (item of nav(); track item.id; let i = $index) {
+        <li>
+          <button
+            type="button"
+            class="kp-rating-nav__item"
+            [class.kp-rating-nav__item--active]="item.id === selectedId()"
+            [class.kp-rating-nav__item--done]="item.points !== null"
+            [attr.aria-current]="item.id === selectedId() ? 'step' : null"
+            (click)="select(item.id)"
+          >
+            <span class="kp-rating-nav__status" aria-hidden="true">
+              @if (item.points !== null) {
+                {{ item.points }}
+              } @else {
+                {{ i + 1 }}
+              }
+            </span>
+            <span class="kp-rating-nav__name">{{ item.name }}</span>
+          </button>
+        </li>
+      }
+    </ol>
+  </nav>
+
+  @if (store.redacted()) {
+    <kp-callout tone="neutral" icon="lock" heading="Zaznaczenia zachowań i uzasadnienia widzi tylko oceniający">
+      W widoku kadr widać wyłącznie, czy ocena cząstkowa została ustalona.
+    </kp-callout>
+  } @else {
+    <div class="kp-rating">
+      <header class="kp-rating__header">
+        <div>
+          <p class="kp-eyebrow">Sekcja {{ index() + 1 }} z {{ criteria().length }} · {{ isMandatory() ? 'obowiązkowe' : 'dodatkowe' }}</p>
+          <h3 class="kp-rating__title">{{ criterionName(selectedId()) }}</h3>
+        </div>
+        <kp-badge [tone]="observations().length > 0 ? 'primary' : 'neutral'" icon="notebook">
+          {{ observations().length | kpPlural: ['obserwacja', 'obserwacje', 'obserwacji'] }}
+        </kp-badge>
+      </header>
+
+      @if (observations().length === 0) {
+        <kp-callout tone="info" heading="Brak obserwacji dla tego kryterium">
+          To nie obniża oceny. Jeśli nie było okazji zaobserwować zachowań, zaznacz „Nie miałem okazji zaobserwować”.
+          @if (store.canEdit()) {
+            <a calloutActions kpButton="ghost" size="sm" icon="plus" [routerLink]="[store.baseUrl(), 'obserwacje']">Dopisz obserwację</a>
+          }
+        </kp-callout>
+      }
+
+      <div class="kp-rating__matrix-wrap">
+        <table class="kp-rating__matrix">
+          <thead>
+            <tr>
+              <th scope="col" class="kp-rating__matrix-corner">Wskaźnik</th>
+              @for (col of columns(); track col.points) {
+                <th scope="col" class="kp-rating__matrix-head">
+                  <span class="kp-rating__matrix-short">{{ col.short }}</span>
+                  <span class="kp-rating__matrix-pts">{{ col.points }} pkt</span>
+                </th>
+              }
+              <th scope="col" class="kp-rating__matrix-nobasis">Brak okazji</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (indicator of indicators(); track indicator.id; let i = $index) {
+              <kp-indicator-card
+                [indicator]="indicator"
+                [assessment]="assessments()[i]"
+                [number]="i + 1"
+                [observations]="observations()"
+                [editable]="editable()"
+                [path]="c().path"
+                [suggestion]="suggestion()"
+                (changed)="onIndicator($event)"
+              />
+            } @empty {
+              <tr>
+                <td [attr.colspan]="columns().length + 2">
+                  <kp-callout tone="warning">Nie udało się wczytać wskaźników z modelu kompetencji.</kp-callout>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <kp-decision-panel
+        [criterionId]="selectedId()"
+        [path]="c().path"
+        [suggestion]="suggestion()"
+        [decision]="rating()?.decision ?? null"
+        [editable]="editable()"
+        (decided)="onDecision($event)"
+      />
+    </div>
+  }
+
+  <ng-container stepActions>
+    @if (previousId(); as previous) {
+      <button type="button" kpButton="ghost" size="sm" icon="chevron-left" (click)="select(previous)">Poprzednie</button>
+    }
+    @if (nextId(); as next) {
+      <button type="button" kpButton iconEnd="chevron-right" (click)="select(next)">Dalej – następne kryterium</button>
+    } @else {
+      <a kpButton iconEnd="arrow-right" [routerLink]="[store.baseUrl(), 'ocena', 'przeglad']">Dalej – zatwierdzenie ocen</a>
+    }
+  </ng-container>
+</kp-step-frame>

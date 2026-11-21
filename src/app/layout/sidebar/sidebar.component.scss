@@ -1,0 +1,133 @@
+@use 'mixins' as m;
+
+:host {
+  display: block;
+}
+
+// Projekt: szerokość 216, logo 166×40 w (24.5, 52.5), pozycje co 53 px, stopka 36 px awatara.
+.kp-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 52px 8px 21.5px 16px;
+  overflow-y: auto;
+  border-right: 0.5px solid var(--kp-color-border);
+  background: var(--kp-color-surface);
+  @include m.scrollbar;
+}
+
+.kp-sidebar__brand {
+  display: block;
+  align-self: flex-start;
+  margin-inline-start: 8.5px;
+  border-radius: var(--kp-radius-sm);
+
+  img {
+    width: 166px;
+    height: 40px;
+  }
+
+  &:focus-visible {
+    @include m.focus-ring;
+  }
+}
+
+.kp-sidebar__nav {
+  flex: 1;
+  margin-top: 37px;
+
+  ul {
+    display: grid;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.kp-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 var(--kp-space-3) 0 13px;
+  border-radius: var(--kp-radius-md);
+  color: var(--kp-color-text);
+  font-size: var(--kp-font-size-sm);
+  text-decoration: none;
+  @include m.interactive-transition(background-color, color);
+
+  &:hover {
+    background: var(--kp-color-bg);
+    color: var(--kp-color-text);
+    text-decoration: none;
+  }
+
+  &--active,
+  &--active:hover {
+    background: var(--kp-color-surface-tint);
+    color: var(--kp-color-primary);
+    font-weight: var(--kp-font-weight-medium);
+
+    .kp-sidebar__icon {
+      color: var(--kp-color-primary);
+    }
+  }
+}
+
+.kp-sidebar__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--kp-color-icon);
+}
+
+.kp-sidebar__account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: var(--kp-space-6);
+  padding: 6px 8px 6px 11.5px;
+  border: 0;
+  border-radius: var(--kp-radius-md);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+  @include m.interactive-transition(background-color);
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--kp-color-bg);
+  }
+
+  &:focus-visible {
+    @include m.focus-ring;
+  }
+}
+
+.kp-sidebar__account-text {
+  display: grid;
+  min-width: 0;
+}
+
+.kp-sidebar__account-name {
+  @include m.truncate;
+  font-size: var(--kp-font-size-xs);
+  font-weight: var(--kp-font-weight-medium);
+}
+
+.kp-sidebar__account-role {
+  @include m.truncate;
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-2xs);
+}
+
+.kp-sidebar__menu {
+  width: 300px;
+  max-height: min(560px, calc(100dvh - 120px));
+  overflow-y: auto;
+  @include m.scrollbar;
+}

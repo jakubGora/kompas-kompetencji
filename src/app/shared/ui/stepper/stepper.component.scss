@@ -1,0 +1,121 @@
+@use 'mixins' as m;
+
+$marker: 32px;
+$gap: 11px;
+
+:host {
+  display: block;
+}
+
+nav {
+  overflow-x: auto;
+  @include m.scrollbar;
+}
+
+.kp-stepper__list {
+  display: grid;
+  grid-template-columns: repeat(var(--_count, 7), minmax(112px, 1fr));
+  column-gap: $gap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kp-stepper__item {
+  position: relative;
+
+  // Łącznik do następnego kroku: od krawędzi kółka do krawędzi kolejnego.
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: calc($marker / 2);
+    left: calc(50% + $marker / 2);
+    width: calc(100% + $gap - $marker);
+    height: 1px;
+    background: var(--kp-color-text);
+  }
+
+  &--done:not(:last-child)::after {
+    background: var(--kp-color-primary);
+  }
+}
+
+.kp-stepper__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+  padding-bottom: 2px;
+  color: var(--kp-color-text);
+  text-align: center;
+  text-decoration: none;
+  border-radius: var(--kp-radius-sm);
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    @include m.focus-ring;
+  }
+}
+
+a.kp-stepper__step:hover .kp-stepper__label {
+  color: var(--kp-color-primary);
+}
+
+.kp-stepper__marker {
+  display: grid;
+  place-items: center;
+  width: $marker;
+  height: $marker;
+  border: 1px solid var(--kp-color-text);
+  border-radius: 50%;
+  background: var(--kp-color-surface);
+  color: var(--kp-color-text);
+  font-size: var(--kp-font-size-sm);
+  font-weight: var(--kp-font-weight-medium);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  @include m.interactive-transition(background-color, border-color, box-shadow);
+}
+
+.kp-stepper__label {
+  font-size: var(--kp-font-size-md);
+  font-weight: var(--kp-font-weight-medium);
+  line-height: 20px;
+  text-wrap: balance;
+}
+
+.kp-stepper__item--done .kp-stepper__marker {
+  border-color: transparent;
+  background: var(--kp-color-surface-tint);
+  color: var(--kp-color-primary);
+}
+
+.kp-stepper__item--current {
+  .kp-stepper__marker {
+    border-color: var(--kp-color-primary);
+    background: var(--kp-color-primary);
+    color: var(--kp-color-text-on-primary);
+  }
+
+  .kp-stepper__label {
+    color: var(--kp-color-primary);
+  }
+}
+
+// Oglądany krok inny niż bieżący (np. powrót do zakończonego etapu).
+.kp-stepper__item:not(.kp-stepper__item--current) .kp-stepper__step--viewed {
+  .kp-stepper__marker {
+    box-shadow: 0 0 0 4px var(--kp-color-surface-tint-strong);
+  }
+
+  .kp-stepper__label {
+    color: var(--kp-color-primary);
+  }
+}
+
+.kp-stepper__step--locked {
+  cursor: default;
+}

@@ -1,0 +1,69 @@
+<section class="kp-step" [class.kp-step--readonly]="reachable() && !editable()" [attr.aria-label]="definition()?.title ?? definition()?.label">
+  @if (!reachable()) {
+    <div class="kp-card kp-step__locked">
+      <kp-empty-state icon="lock" heading="Ten krok będzie dostępny później" [description]="blockedBy() ? 'Najpierw zakończ krok „' + blockedBy()!.label + '”.' : undefined">
+        @if (blockedBy(); as blocking) {
+          <a kpButton="secondary" [routerLink]="[store.baseUrl(), blocking.id]">Przejdź do kroku „{{ blocking.label }}”</a>
+        }
+      </kp-empty-state>
+    </div>
+  } @else {
+    @if (completedNote() && record()?.completedAt; as completedAt) {
+      <div class="kp-status-note kp-status-note--success kp-step__done">
+        <p class="kp-status-note__title">✓ Krok zakończony {{ completedAt | kpDate: 'datetime' }}</p>
+        <p class="kp-status-note__text">Dane z tego kroku są zablokowane — to część dokumentacji oceny.</p>
+      </div>
+    }
+
+    <div class="kp-step__content">
+      <ng-content />
+    </div>
+
+    @if (serverIssues().length > 0) {
+      <kp-callout class="kp-step__issues" tone="danger" heading="Uzupełnij, aby przejść dalej" [live]="true">
+        <ul class="kp-issues">
+          @for (issue of serverIssues(); track issue) {
+            <li>{{ issue }}</li>
+          }
+        </ul>
+      </kp-callout>
+    } @else if (editable() && warnings().length > 0) {
+      <kp-callout class="kp-step__issues" tone="warning" heading="Warto sprawdzić">
+        <ul class="kp-issues">
+          @for (issue of warnings(); track issue.message) {
+            <li>{{ issue.message }}</li>
+          }
+        </ul>
+      </kp-callout>
+    }
+
+    <div class="kp-step-actions kp-no-print">
+      <div class="kp-step-actions__group">
+        @if (previousLink(); as link) {
+          <a kpButton="link" [routerLink]="link">Wstecz</a>
+        } @else {
+          <a kpButton="link" [routerLink]="session.homeUrl()">{{ session.isHr() ? 'Wróć do procesów ocen' : 'Wróć do moich ocen' }}</a>
+        }
+        @if (editable()) {
+          <kp-save-status [state]="store.saveState()" (retry)="store.retrySave()" />
+        }
+      </div>
+      <div class="kp-step-actions__group">
+        @if (completable() && editable() && openErrors() > 0) {
+          <span class="kp-step__todo">Do uzupełnienia: {{ openErrors() }}</span>
+        }
+        <ng-content select="[stepActions]" />
+        @if (draftable() && editable()) {
+          <button type="button" kpButton="secondary" [disabled]="store.saveState().status === 'saving'" (click)="saveDraft()">Zapisz szkic</button>
+        }
+        @if (completable() && editable()) {
+          <button type="button" kpButton [loading]="store.completing() === stepId()" (click)="complete()">
+            {{ completeLabel() }}
+          </button>
+        } @else if (completable() && next(); as nextStep) {
+          <a kpButton [routerLink]="nextStep.link">{{ nextLabel() ?? 'Przejdź dalej: ' + nextStep.label }}</a>
+        }
+      </div>
+    </div>
+  }
+</section>

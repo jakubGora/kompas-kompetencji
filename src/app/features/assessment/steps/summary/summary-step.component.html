@@ -1,0 +1,273 @@
+<kp-step-frame
+  stepId="podsumowanie"
+  completeLabel="Zatwierdź dane i przejdź do podglądu"
+  nextLabel="Przejdź do podglądu arkusza"
+  [draftable]="true"
+>
+  @if (periodic(); as r) {
+    <section class="kp-card kp-part2" aria-labelledby="kp-part2-title">
+      <div class="kp-card__header">
+        <div>
+          <p class="kp-eyebrow">§ 11 ust. 1</p>
+          <h2 class="kp-card__title" id="kp-part2-title">Część II — oceny cząstkowe</h2>
+        </div>
+      </div>
+
+      <div class="kp-part2__table-wrap">
+        <table class="kp-part2__table">
+          <thead>
+            <tr>
+              <th scope="col">Kryterium</th>
+              @for (col of scaleColumns(); track col.points) {
+                <th scope="col" class="kp-part2__scale">{{ shortLabel(col.points) }}</th>
+              }
+              <th scope="col" class="kp-part2__pts">Punkty</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of scores(); track s.id) {
+              <tr [class.kp-part2__row--veto]="s.points === 1">
+                <th scope="row">{{ s.name }}</th>
+                @for (col of scaleColumns(); track col.points) {
+                  <td class="kp-part2__mark">
+                    @if (s.points === col.points) {
+                      <span class="kp-part2__x" aria-label="{{ col.label }}">×</span>
+                    }
+                  </td>
+                }
+                <td class="kp-part2__pts">{{ s.points ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <footer class="kp-part2__result" [class.kp-part2__result--neg]="r.outcome === 'negatywna'">
+        <div class="kp-part2__person">
+          <span class="kp-part2__avatar" aria-hidden="true">{{ c().employee.firstName.charAt(0) }}{{ c().employee.lastName.charAt(0) }}</span>
+          <div>
+            <p class="kp-part2__name">{{ c().employee.fullName }}</p>
+            <p class="kp-muted kp-text-sm">{{ c().position.title }} · średnia z {{ scores().length }} kryteriów</p>
+          </div>
+        </div>
+        <div class="kp-part2__score">
+          @if (r.outcome; as o) {
+            <p class="kp-part2__outcome">{{ o | uppercase }} — {{ r.level?.label?.toLowerCase() ?? 'wynik niepełny' }}</p>
+          }
+          <p class="kp-part2__mean">{{ r.mean | kpScore }}</p>
+        </div>
+      </footer>
+    </section>
+
+    @if (r.vetoCriteria.length > 0) {
+      <kp-callout tone="danger" heading="Reguła weta: ocena cząstkowa 1 pkt">
+        Mimo średniej {{ r.mean | kpScore }} ocena jest negatywna, bo co najmniej jedno kryterium oceniono na 1 pkt (§ 11 ust. 1 pkt 4).
+      </kp-callout>
+    }
+  }
+
+  @if (first(); as r) {
+    <section class="kp-card kp-result" [class.kp-result--negative]="r.outcome === 'negatywna'" aria-labelledby="kp-first-title">
+      <div class="kp-result__main">
+        <p class="kp-eyebrow">Pierwsza ocena · § 10 ust. 1</p>
+        <h3 class="kp-result__level" id="kp-first-title">
+          @switch (r.outcome) {
+            @case ('pozytywna') { Wszystkie warunki pozytywnej oceny są spełnione }
+            @case ('negatywna') { Co najmniej jeden warunek nie jest spełniony }
+            @default { Uzupełnij brakujące informacje }
+          }
+        </h3>
+        @if (r.outcome; as o) {
+          <kp-badge [tone]="o === 'pozytywna' ? 'success' : 'danger'" [strong]="true">Ocena {{ o }}</kp-badge>
+        }
+        <ul class="kp-conditions">
+          @for (condition of r.conditions; track condition.id) {
+            <li class="kp-conditions__item" [attr.data-met]="condition.met">
+              <kp-icon [name]="condition.met === true ? 'check-circle' : condition.met === false ? 'x-circle' : 'circle'" [size]="20" />
+              <div>
+                <p class="kp-conditions__label">{{ condition.label }}</p>
+                <p class="kp-conditions__detail">{{ condition.detail }} <span class="kp-legal">{{ condition.legalRef }}</span></p>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+      <ul class="kp-result__scores" aria-label="Oceny elementów">
+        @for (s of scores(); track s.id) {
+          <li>
+            <span class="kp-result__score-name">{{ s.name }}</span>
+            <span class="kp-result__score-points">{{ s.points ?? '—' }}</span>
+          </li>
+        }
+        <li class="kp-result__score-total">
+          <span class="kp-result__score-name">Ocena łączna</span>
+          <span class="kp-result__score-points">{{ r.mean | kpScore }}</span>
+        </li>
+      </ul>
+    </section>
+  }
+
+  @if (store.redacted()) {
+    <kp-callout tone="neutral" icon="lock">Uzasadnienie i wnioski widzi oceniający i oceniany — w kadrach trafią do akt wraz z arkuszem.</kp-callout>
+  } @else {
+    <div class="kp-summary__duo">
+      <section class="kp-card kp-summary__panel" aria-labelledby="kp-justification-title">
+        <div class="kp-card__header">
+          <h3 class="kp-card__title" id="kp-justification-title">Uzasadnienie</h3>
+          @if (k().justificationAiDraft) {
+            <span class="kp-chip kp-chip--ai"><kp-icon name="sparkles" [size]="12" /> Sugerowane przez AI</span>
+          }
+        </div>
+        @if (k().sheetGeneratedAt && editable()) {
+          <kp-callout tone="warning" class="kp-summary__notice">
+            Arkusz jest już wygenerowany. Zmiana treści unieważni go — trzeba będzie wygenerować nową wersję.
+          </kp-callout>
+        }
+        <kp-field
+          label="Treść uzasadnienia"
+          [optionalHint]="outcome() !== 'negatywna'"
+          [hint]="outcome() === 'negatywna' ? 'Obowiązkowe przy ocenie negatywnej.' : 'Opcjonalne przy ocenie pozytywnej.'"
+          [field]="f.justification"
+        >
+          @if (editable()) {
+            <button type="button" fieldAside kpButton="ai" size="sm" icon="sparkles" [loading]="store.busy() === 'draft-justification'" (click)="draftJustification()">
+              Szkic z faktów
+            </button>
+          }
+          <textarea kpControl class="kp-textarea" rows="5" [formField]="f.justification"></textarea>
+        </kp-field>
+        @if (editable()) {
+          <button type="button" class="kp-link-button" (click)="draftJustification()">Zweryfikuj i edytuj uzasadnienie</button>
+        }
+      </section>
+
+      <section class="kp-card kp-summary__panel" aria-labelledby="kp-dev-title">
+        <div class="kp-card__header">
+          <h3 class="kp-card__title" id="kp-dev-title">{{ isFirst() ? 'Kierunki rozwoju' : 'Kierunki rozwoju · IPRZ' }}</h3>
+          @if (f.developmentPlan().value()) {
+            <span class="kp-chip"><kp-icon name="check" [size]="12" /> Zatwierdzone</span>
+          }
+        </div>
+        <kp-field
+          [label]="isFirst() ? 'Wnioski rozwojowe' : 'Wnioski do IPRZ'"
+          [optionalHint]="isFirst()"
+          [hint]="isFirst() ? 'W porozumieniu z kierującym komórką (§ 10 ust. 6).' : 'Konkretne działania z rozmowy oceniającej.'"
+          [field]="f.developmentPlan"
+        >
+          @if (editable()) {
+            <button type="button" fieldAside kpButton="ai" size="sm" icon="sparkles" [loading]="store.busy() === 'draft-development'" (click)="draftDevelopmentPlan()">
+              Szkic z rozmowy
+            </button>
+          }
+          <textarea kpControl class="kp-textarea" rows="5" [formField]="f.developmentPlan"></textarea>
+        </kp-field>
+      </section>
+    </div>
+
+    @if (showPromotion()) {
+      <section class="kp-card" aria-labelledby="kp-promo-title">
+        <h3 class="kp-card__title" id="kp-promo-title">Część III — wniosek o kolejny stopień służbowy</h3>
+        <fieldset class="kp-fieldset kp-summary__promotion" [disabled]="!editable()">
+          <legend class="kp-visually-hidden">Wniosek o stopień</legend>
+          <div class="kp-summary__choices">
+            <label class="kp-choice kp-choice--compact">
+              <input type="radio" value="tak" [formField]="f.promotionRequest" />
+              <span class="kp-choice__body"><span class="kp-choice__title">Wnioskuję</span></span>
+            </label>
+            <label class="kp-choice kp-choice--compact">
+              <input type="radio" value="nie" [formField]="f.promotionRequest" />
+              <span class="kp-choice__body"><span class="kp-choice__title">Nie wnioskuję</span></span>
+            </label>
+          </div>
+          @if (!f.promotionJustification().hidden()) {
+            <kp-field label="Uzasadnienie wniosku" [field]="f.promotionJustification">
+              <textarea kpControl class="kp-textarea" rows="3" [formField]="f.promotionJustification"></textarea>
+            </kp-field>
+          }
+        </fieldset>
+      </section>
+    }
+  }
+
+  @if (isFirst()) {
+    <section class="kp-card" aria-labelledby="kp-head-title">
+      <div class="kp-card__header">
+        <div>
+          <p class="kp-eyebrow">Art. 38 ust. 3 ustawy · § 11 rozporządzenia z 2015 r.</p>
+          <h3 class="kp-card__title" id="kp-head-title">Kierujący komórką organizacyjną</h3>
+          <p class="kp-card__subtitle">{{ c().headOfUnit?.fullName ?? 'Kierujący komórką' }} potwierdza ocenę i kieruje wniosek do dyrektora generalnego.</p>
+        </div>
+      </div>
+      <div class="kp-summary__dates">
+        <kp-field label="Data potwierdzenia oceny" [field]="f.headOfUnitConfirmedAt">
+          <input kpControl type="date" class="kp-input" [formField]="f.headOfUnitConfirmedAt" />
+        </kp-field>
+        <kp-field label="Wniosek do dyrektora generalnego" [optionalHint]="true" [field]="f.headOfUnitRequest">
+          <select kpControl class="kp-select" [formField]="f.headOfUnitRequest">
+            <option value="">Wybierz…</option>
+            @for (option of requests(); track option.id) {
+              <option [value]="option.id">{{ option.label }}</option>
+            }
+          </select>
+        </kp-field>
+      </div>
+    </section>
+  }
+
+  <section class="kp-card" aria-labelledby="kp-sheet-title">
+    <div class="kp-card__header">
+      <div>
+        <p class="kp-eyebrow">{{ isFirst() ? '§ 11 rozporządzenia z 2015 r.' : '§ 12 · art. 83 ustawy' }}</p>
+        <h3 class="kp-card__title" id="kp-sheet-title">Dokument i zapoznanie</h3>
+      </div>
+      @if (sheet(); as doc) {
+        <kp-badge [tone]="doc.status === 'szkic' ? 'warning' : 'success'" icon="file-check">
+          {{ doc.status === 'szkic' ? 'wymaga ponownego wygenerowania' : 'wersja ' + doc.version }}
+        </kp-badge>
+      }
+    </div>
+
+    <div class="kp-summary__doc-row">
+      <kp-field label="Data sporządzenia oceny" [field]="f.draftedAt" [hint]="isFirst() ? undefined : 'Kończy okres oceny („DO”).'">
+        <input kpControl type="date" class="kp-input" [formField]="f.draftedAt" />
+        @if (editable() && !f.draftedAt().value()) {
+          <button type="button" fieldAside class="kp-link-button" (click)="setToday()">Dzisiaj</button>
+        }
+      </kp-field>
+      <div class="kp-cluster">
+        @if (editable()) {
+          <button type="button" [kpButton]="k().sheetGeneratedAt ? 'secondary' : 'primary'" size="sm" icon="file-check" [loading]="store.busy() === 'document'" (click)="generateSheet()">
+            {{ k().sheetGeneratedAt ? 'Wygeneruj ponownie' : 'Wygeneruj arkusz' }}
+          </button>
+        }
+        <a kpButton="ghost" size="sm" icon="printer" [routerLink]="[store.baseUrl(), 'arkusz']">Podgląd arkusza</a>
+      </div>
+    </div>
+
+    <div class="kp-summary__ack-block">
+      <p class="kp-summary__ack-title">Zapoznanie ocenianego</p>
+      @if (k().employeeAcknowledgedAt; as ack) {
+        <p class="kp-text-sm">
+          <kp-icon name="check-circle" [size]="16" /> Zapoznano {{ ack | kpDate: 'long' }}
+          @if (objectionUntil(); as until) {
+            · sprzeciw do {{ until | kpDate }}
+          }
+        </p>
+      } @else if (store.isEditable('podsumowanie')) {
+        <div class="kp-summary__ack">
+          <input type="date" class="kp-input" [value]="ackDate()" (input)="onAckDate($event)" [attr.aria-invalid]="ackError() ? 'true' : null" />
+          <button type="button" kpButton="secondary" size="sm" icon="check" [disabled]="!k().sheetGeneratedAt" [loading]="store.busy() === 'acknowledgement'" (click)="acknowledge()">
+            Odnotuj zapoznanie
+          </button>
+        </div>
+        @if (ackError(); as error) {
+          <p class="kp-summary__error" role="alert">{{ error }}</p>
+        } @else if (!k().sheetGeneratedAt) {
+          <p class="kp-muted kp-text-xs">Najpierw wygeneruj arkusz.</p>
+        }
+      }
+    </div>
+  </section>
+
+  <a stepActions kpButton="secondary" icon="printer" [routerLink]="[store.baseUrl(), 'arkusz']">Podgląd arkusza</a>
+</kp-step-frame>

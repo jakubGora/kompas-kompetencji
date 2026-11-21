@@ -1,0 +1,72 @@
+import { inject } from '@angular/core';
+import type { Routes } from '@angular/router';
+import { roleGuard } from '@core/session/role.guard';
+import { SessionStore } from '@core/session/session.store';
+import { ShellComponent } from './layout/shell/shell.component';
+
+export const routes: Routes = [
+  {
+    path: '',
+    component: ShellComponent,
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: () => inject(SessionStore).homeUrl() },
+      {
+        path: 'procesy',
+        title: 'Procesy ocen',
+        canActivate: [roleGuard('hr')],
+        loadComponent: () => import('./features/hr-dashboard/hr-dashboard.page').then((m) => m.HrDashboardPage),
+      },
+      {
+        path: 'moje-oceny',
+        title: 'Moje oceny',
+        canActivate: [roleGuard('manager')],
+        loadComponent: () => import('./features/my-assessments/my-assessments.page').then((m) => m.MyAssessmentsPage),
+      },
+      {
+        path: 'oceny/:caseId',
+        loadChildren: () => import('./features/assessment/assessment.routes'),
+      },
+      {
+        path: 'pracownicy',
+        title: 'Pracownicy',
+        loadComponent: () => import('./features/employees/employees.page').then((m) => m.EmployeesPage),
+      },
+      {
+        path: 'pracownicy/:employeeId',
+        title: 'Pracownik',
+        loadComponent: () => import('./features/employees/employee-detail.page').then((m) => m.EmployeeDetailPage),
+      },
+      {
+        path: 'przypomnienia',
+        title: 'Przypomnienia',
+        canActivate: [roleGuard('hr')],
+        loadComponent: () => import('./features/reminders/reminders.page').then((m) => m.RemindersPage),
+      },
+      {
+        path: 'rekrutacje',
+        title: 'Rekrutacje',
+        loadComponent: () => import('./features/recruitment/recruitment.page').then((m) => m.RecruitmentPage),
+      },
+      {
+        path: 'rekrutacje/kandydaci/:candidateId',
+        title: 'Kandydat',
+        loadComponent: () => import('./features/recruitment/candidate.page').then((m) => m.CandidatePage),
+      },
+      {
+        path: 'baza-wiedzy',
+        title: 'Baza wiedzy',
+        loadComponent: () => import('./features/knowledge/knowledge.page').then((m) => m.KnowledgePage),
+      },
+      {
+        path: 'brak-dostepu',
+        title: 'Brak dostępu',
+        loadComponent: () => import('./features/system/forbidden.page').then((m) => m.ForbiddenPage),
+      },
+      {
+        path: '**',
+        title: 'Nie znaleziono strony',
+        loadComponent: () => import('./features/system/not-found.page').then((m) => m.NotFoundPage),
+      },
+    ],
+  },
+];

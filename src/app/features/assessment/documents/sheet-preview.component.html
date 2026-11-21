@@ -1,0 +1,195 @@
+<div class="kp-preview kp-no-print">
+  <header class="kp-preview__header">
+    <div>
+      <h1 class="kp-preview__title">{{ isFirst() ? 'Arkusz pierwszej oceny' : 'Arkusz oceny okresowej' }}</h1>
+      <p class="kp-muted">
+        {{ c().employee.fullName }}
+        @if (variant(); as v) {
+          · Arkusz {{ v }}
+        }
+        · dane demonstracyjne
+      </p>
+    </div>
+    <div class="kp-cluster">
+      @if (!generated()) {
+        <span class="kp-preview__note">Podgląd roboczy — arkusz do podpisu wygenerujesz w ostatnim kroku.</span>
+      }
+      <button type="button" kpButton icon="printer" (click)="print()">Drukuj / zapisz PDF</button>
+    </div>
+  </header>
+</div>
+
+@if (store.redacted()) {
+  <kp-callout class="kp-no-print kp-sheet-redacted" tone="neutral" icon="lock">
+    W widoku kadr treść uzasadnienia i oczekiwań jest ukryta. Pełny arkusz trafia do akt po podpisaniu.
+  </kp-callout>
+}
+
+<div class="kp-preview__layout">
+  <div class="kp-preview__docs">
+    <article class="kp-doc kp-print-root" [class.kp-doc--draft]="!generated()" aria-label="Część I arkusza">
+      @if (!generated()) {
+        <div class="kp-doc__watermark" aria-hidden="true">SZKIC</div>
+      }
+      <header class="kp-doc__head">
+        <p class="kp-doc__office">{{ c().position.office }}</p>
+        <p class="kp-doc__badge">{{ isFirst() ? 'Pierwsza ocena' : 'ARKUSZ ' + (variant() ?? '—') }} · CZĘŚĆ I</p>
+      </header>
+
+      <dl class="kp-doc__meta">
+        <div><dt>Oceniany</dt><dd>{{ c().employee.fullName }} · {{ c().position.title }}</dd></div>
+        <div><dt>Komórka</dt><dd>{{ c().orgUnitName }}</dd></div>
+        <div><dt>Oceniający</dt><dd>{{ c().evaluator.fullName }}</dd></div>
+        @if (isFirst()) {
+          <div><dt>Zatrudnienie</dt><dd>{{ c().employee.employment.since | kpDate }}</dd></div>
+          <div><dt>Rozmowa wstępna</dt><dd>{{ c().preliminary.meetingDate | kpDate }}</dd></div>
+          <div>
+            <dt>Sprawozdanie</dt>
+            <dd>{{ c().preliminary.reportWindow?.from | kpDate }} – {{ c().preliminary.reportWindow?.to | kpDate }}</dd>
+          </div>
+        } @else {
+          <div><dt>Okres oceny</dt><dd>od {{ c().preliminary.employeeAcknowledgedAt | kpDate }}</dd></div>
+          <div><dt>Termin oceny</dt><dd>{{ c().preliminary.assessmentDueDate | kpDate }}</dd></div>
+        }
+      </dl>
+
+      <h2 class="kp-doc__section">Kryteria i oczekiwania</h2>
+      <ol class="kp-doc__criteria">
+        @for (row of rows(); track row.id) {
+          <li>
+            <strong>{{ row.no }}. {{ row.name }}</strong>
+            <span>{{ row.expectation || '—' }}</span>
+          </li>
+        }
+      </ol>
+
+      @if (!isFirst() && c().preliminary.goals.length > 0) {
+        <h2 class="kp-doc__section">Cele</h2>
+        <ul class="kp-doc__list">
+          @for (goal of c().preliminary.goals; track goal.id) {
+            <li>{{ goal.text }}</li>
+          }
+        </ul>
+      }
+
+      <div class="kp-doc__signs">
+        <div><span>{{ c().preliminary.employeeAcknowledgedAt | kpDate }}</span>podpis ocenianego</div>
+        <div><span></span>podpis oceniającego</div>
+      </div>
+    </article>
+
+    <article class="kp-doc kp-print-root" [class.kp-doc--draft]="!generated()" aria-label="Część II arkusza">
+      <header class="kp-doc__head">
+        <p class="kp-doc__office">{{ c().position.office }}</p>
+        <p class="kp-doc__badge">{{ isFirst() ? 'Pierwsza ocena' : 'ARKUSZ ' + (variant() ?? '—') }} · CZĘŚĆ II</p>
+      </header>
+
+      <h2 class="kp-doc__section">Oceny cząstkowe</h2>
+      <table class="kp-doc__scores">
+        <thead>
+          <tr>
+            <th scope="col">Kryterium</th>
+            @for (col of scaleColumns(); track col.points) {
+              <th scope="col">{{ col.points }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr>
+              <th scope="row">{{ row.name }}</th>
+              @for (col of scaleColumns(); track col.points) {
+                <td>{{ row.points === col.points ? '×' : '' }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (periodic(); as r) {
+        <p class="kp-doc__result">
+          Średnia: <strong>{{ r.mean | kpScore }}</strong>
+          · {{ r.level?.label?.toLowerCase() ?? '—' }}
+          / <strong>OCENA {{ outcome() | uppercase }}</strong>
+        </p>
+      }
+      @if (first(); as r) {
+        <p class="kp-doc__result">
+          Ocena łączna: <strong>{{ r.mean | kpScore }}</strong>
+          · egzamin: {{ examText() }}
+          / <strong>OCENA {{ outcome() | uppercase }}</strong>
+        </p>
+      }
+
+      <h2 class="kp-doc__section">Uzasadnienie</h2>
+      <p class="kp-doc__text">
+        {{ store.redacted() ? '⸻' : c().conclusion.justification || (outcome() === 'pozytywna' ? 'Nie sporządzono (ocena pozytywna).' : '—') }}
+      </p>
+
+      <h2 class="kp-doc__section">{{ isFirst() ? 'Rozwój zawodowy' : 'Wnioski do IPRZ' }}</h2>
+      <p class="kp-doc__text">{{ store.redacted() ? '⸻' : c().conclusion.developmentPlan || '—' }}</p>
+
+      <div class="kp-doc__signs">
+        <div><span>{{ c().conclusion.draftedAt | kpDate }}</span>podpis oceniającego</div>
+        <div><span>{{ c().conclusion.employeeAcknowledgedAt | kpDate }}</span>zapoznanie ocenianego</div>
+      </div>
+    </article>
+  </div>
+
+  <aside class="kp-preview__aside kp-no-print" aria-label="Status dokumentu">
+    <section class="kp-aside-card">
+      <h2 class="kp-aside-card__title">Zapoznanie ocenianej</h2>
+      @if (c().conclusion.employeeAcknowledgedAt; as ack) {
+        <p class="kp-aside-card__ok"><kp-icon name="check-circle" [size]="16" /> {{ c().employee.fullName }} · {{ ack | kpDate }}</p>
+        @if (objectionUntil(); as until) {
+          <p class="kp-muted kp-text-sm">Sprzeciw do {{ until | kpDate }}</p>
+        }
+      } @else {
+        <p class="kp-muted kp-text-sm">Jeszcze nie odnotowano zapoznania.</p>
+      }
+    </section>
+
+    <section class="kp-aside-card">
+      <h2 class="kp-aside-card__title">Historia dokumentów</h2>
+      <ol class="kp-aside-card__list">
+        @for (event of recentHistory(); track event.id) {
+          <li>
+            <span>{{ event.at | kpDate }}</span>
+            {{ event.summary }}
+          </li>
+        } @empty {
+          <li class="kp-muted">Brak zdarzeń</li>
+        }
+      </ol>
+    </section>
+
+    @if (!showPartThree()) {
+      <section class="kp-aside-card kp-aside-card--muted">
+        <h2 class="kp-aside-card__title">Część III nie dotyczy</h2>
+        <p class="kp-muted kp-text-sm">
+          @if (isFirst()) {
+            Część III dotyczy wyłącznie urzędników służby cywilnej w ocenie okresowej.
+          } @else {
+            Oceniana osoba nie jest urzędnikiem służby cywilnej — wniosek o stopień nie występuje.
+          }
+        </p>
+      </section>
+    } @else {
+      <section class="kp-aside-card">
+        <h2 class="kp-aside-card__title">Część III</h2>
+        <p class="kp-text-sm">
+          @switch (c().conclusion.promotionRequest) {
+            @case ('tak') { Wnioskuję o kolejny stopień. {{ c().conclusion.promotionJustification }} }
+            @case ('nie') { Nie wnioskuję o kolejny stopień. }
+            @default { Brak decyzji. }
+          }
+        </p>
+      </section>
+    }
+  </aside>
+</div>
+
+<div class="kp-preview__actions kp-no-print">
+  <a kpButton="secondary" icon="arrow-left" [routerLink]="[store.baseUrl(), 'podsumowanie']">Wróć do podsumowania</a>
+  <a kpButton="ghost" icon="history" [routerLink]="[store.baseUrl(), 'historia']">Zobacz historię</a>
+</div>

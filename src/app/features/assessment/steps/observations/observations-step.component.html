@@ -1,0 +1,75 @@
+<kp-step-frame
+  stepId="obserwacje"
+  completeLabel="Przygotuj rozmowę oceniającą"
+  nextLabel="Przejdź do rozmowy oceniającej"
+  [draftable]="true"
+  [completedNote]="false"
+>
+  <div class="kp-observations">
+    <div class="kp-observations__deadline" role="note">
+      <p class="kp-observations__deadline-title">
+        @if (shift(); as s) {
+          <span>+{{ s.days }} dni</span>
+          <span class="kp-observations__deadline-separator" aria-hidden="true">|</span>
+        }
+        <span>Termin oceny: {{ deadlines().dueDate | kpDate }}</span>
+      </p>
+      <p class="kp-observations__deadline-text">{{ deadlineText() }}</p>
+    </div>
+
+    @if (store.redacted()) {
+      <kp-callout tone="neutral" icon="lock" heading="Treść obserwacji widzi tylko oceniający">
+        Kadry widzą postęp procesu i terminy. Notatki z obserwacji są materiałem roboczym przełożonego.
+      </kp-callout>
+    } @else {
+      <section class="kp-observations__section" aria-labelledby="kp-observations-title">
+        <header class="kp-observations__header">
+          <h3 class="kp-observations__title" id="kp-observations-title">
+            Obserwacje ({{ observations().length }})
+            @if (periodStart(); as start) {
+              od {{ start | kpDate }}
+            }
+          </h3>
+          @if (editable()) {
+            <button type="button" kpButton="secondary" (click)="open()">Dodaj obserwację</button>
+          }
+        </header>
+
+        @if (observations().length === 0) {
+          <div class="kp-card kp-observations__empty">
+            <kp-empty-state
+              icon="notebook"
+              heading="Jeszcze nie ma obserwacji"
+              description="Zapisuj sytuacje na bieżąco — po kilku miesiącach trudno odtworzyć fakty. Wystarczy data i krótki opis zachowania."
+            >
+              @if (editable()) {
+                <button type="button" kpButton (click)="open()">Dodaj pierwszą obserwację</button>
+              }
+            </kp-empty-state>
+          </div>
+        } @else {
+          <ol class="kp-observations__list" aria-labelledby="kp-observations-title" tabindex="0">
+            @for (o of observations(); track o.id) {
+              <li class="kp-observation-card" [class.kp-observation-card--interactive]="editable()">
+                <p class="kp-observation-card__meta">
+                  <span class="kp-observation-card__date">{{ o.date | kpDate }}</span>
+                  <span class="kp-observation-card__criteria">{{ criteriaLabel(o) }}</span>
+                </p>
+                <h4 class="kp-observation-card__title">
+                  @if (editable()) {
+                    <button type="button" class="kp-observation-card__open" (click)="open(o)">
+                      {{ o.title }}<span class="kp-visually-hidden"> — edytuj obserwację</span>
+                    </button>
+                  } @else {
+                    {{ o.title }}
+                  }
+                </h4>
+                <p class="kp-observation-card__text">{{ o.description }}</p>
+              </li>
+            }
+          </ol>
+        }
+      </section>
+    }
+  </div>
+</kp-step-frame>

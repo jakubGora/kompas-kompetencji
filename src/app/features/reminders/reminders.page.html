@@ -1,0 +1,182 @@
+<kp-page-header
+  eyebrow="Kadry"
+  heading="Przypomnienia"
+  description="Terminy wyliczamy z ustawy i rozporządzeń. Przypomnienia trafiają do skrzynki powiadomień oceniającego w aplikacji."
+/>
+
+<div ngTabs class="kp-reminders">
+  <div ngTabList class="kp-tabs__list" [(selectedTab)]="tab" aria-label="Widoki przypomnień">
+    <button ngTab type="button" class="kp-tabs__tab" value="do-wyslania">
+      Do wysłania <span class="kp-tabs__count">{{ candidateList().length }}</span>
+    </button>
+    <button ngTab type="button" class="kp-tabs__tab" value="reguly">Reguły</button>
+    <button ngTab type="button" class="kp-tabs__tab" value="wyslane">
+      Wysłane
+      @if (unreadCount() > 0) {
+        <span class="kp-tabs__count" [attr.aria-label]="unreadCount() + ' nieprzeczytanych'">{{ unreadCount() }}</span>
+      }
+    </button>
+  </div>
+
+  <div ngTabPanel class="kp-tabs__panel" value="do-wyslania">
+    <ng-template ngTabContent>
+      @if (candidates.isLoading() && !candidates.hasValue()) {
+        <kp-skeleton height="240px" radius="var(--kp-radius-lg)" />
+      } @else if (candidateList().length === 0) {
+        <div class="kp-card">
+          <kp-empty-state icon="check-circle" heading="Nie ma czego przypominać" description="Żaden termin z włączonych reguł nie zbliża się w najbliższym czasie." />
+        </div>
+      } @else {
+        <div class="kp-reminders__layout">
+          <section class="kp-card kp-card--flush" aria-label="Sprawy do przypomnienia">
+            <div class="kp-reminders__toolbar">
+              <label class="kp-checkbox">
+                <input type="checkbox" [checked]="allSelected()" (change)="toggleAll($any($event.target).checked)" />
+                Zaznacz wszystkie
+              </label>
+              @if (urgentCount() > 0) {
+                <button type="button" class="kp-link-button" (click)="selectUrgent()">Tylko pilne ({{ urgentCount() }})</button>
+              }
+            </div>
+            <ul class="kp-reminders__list">
+              @for (candidate of candidateList(); track candidate.id) {
+                <li class="kp-reminders__item" [class.kp-reminders__item--selected]="selected().has(candidate.id)">
+                  <label class="kp-checkbox kp-reminders__check">
+                    <input
+                      type="checkbox"
+                      [checked]="selected().has(candidate.id)"
+                      (change)="toggle(candidate.id, $any($event.target).checked)"
+                      [attr.aria-describedby]="'kp-reminder-' + candidate.id"
+                    />
+                    <span class="kp-reminders__title">{{ candidate.title }}</span>
+                  </label>
+                  <div class="kp-reminders__body" [id]="'kp-reminder-' + candidate.id">
+                    <p class="kp-reminders__message">{{ candidate.message }}</p>
+                    <p class="kp-reminders__meta">
+                      Do: <strong>{{ candidate.recipient.fullName }}</strong> · ocena: {{ candidate.employeeName }} · reguła: {{ ruleNames().get(candidate.ruleId) ?? candidate.ruleId }}
+                      @if (candidate.lastSentAt) {
+                        · ostatnio wysłano {{ candidate.lastSentAt | kpDate: 'datetime' }}
+                      }
+                    </p>
+                  </div>
+                  <div class="kp-reminders__side">
+                    <kp-badge [tone]="severity[candidate.severity].tone" [dot]="true">{{ severity[candidate.severity].label }}</kp-badge>
+                    <kp-due-chip [date]="candidate.dueDate" />
+                    <a class="kp-link-button" [routerLink]="['/oceny', candidate.caseId]">Otwórz ocenę</a>
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <aside class="kp-card kp-reminders__compose" aria-labelledby="kp-compose-title">
+            <h2 class="kp-card__title" id="kp-compose-title">Wyślij przypomnienie</h2>
+            <p class="kp-card__subtitle">
+              {{ selected().size === 0 ? 'Zaznacz sprawy na liście.' : (selected().size | kpPlural: ['sprawa', 'sprawy', 'spraw']) + ' — każdy oceniający dostanie osobne powiadomienie.' }}
+            </p>
+            <label class="kp-reminders__note-label" for="kp-reminder-note">Dopisek od kadr <span class="kp-muted">(opcjonalnie)</span></label>
+            <textarea
+              id="kp-reminder-note"
+              class="kp-textarea"
+              rows="4"
+              [attr.maxlength]="noteLimit"
+              placeholder="Np. Prosimy o kontakt, jeśli potrzebny jest nowy termin."
+              [value]="note()"
+              (input)="note.set($any($event.target).value)"
+            ></textarea>
+            <p class="kp-reminders__counter kp-tabular">{{ note().length }}/{{ noteLimit }}</p>
+            <button type="button" kpButton icon="send" [loading]="sending()" [disabled]="selected().size === 0" (click)="send()">
+              Wyślij {{ selected().size > 0 ? '(' + selected().size + ')' : '' }}
+            </button>
+            <kp-callout tone="neutral" icon="info">W wersji demonstracyjnej nie wysyłamy e-maili — powiadomienie pojawia się w dzwonku oceniającego.</kp-callout>
+          </aside>
+        </div>
+      }
+    </ng-template>
+  </div>
+
+  <div ngTabPanel class="kp-tabs__panel" value="reguly">
+    <ng-template ngTabContent>
+      @if (rules.isLoading() && !rules.hasValue()) {
+        <kp-skeleton height="240px" radius="var(--kp-radius-lg)" />
+      } @else {
+        <ul class="kp-rules">
+          @for (rule of ruleList(); track rule.id) {
+            <li class="kp-card kp-rules__item">
+              <div class="kp-rules__text">
+                <h3 class="kp-rules__name" [id]="'kp-rule-' + rule.id">{{ rule.name }}</h3>
+                <p class="kp-rules__description">{{ rule.description }}</p>
+                <div class="kp-cluster">
+                  @for (days of rule.daysBefore; track days) {
+                    <span class="kp-chip">{{ days === 0 ? 'w dniu terminu' : days + ' dni przed' }}</span>
+                  }
+                </div>
+                <p class="kp-legal">{{ rule.legalRef }}</p>
+              </div>
+              <label class="kp-switch">
+                <input
+                  type="checkbox"
+                  role="switch"
+                  [checked]="rule.enabled"
+                  [disabled]="savingRule() === rule.id"
+                  [attr.aria-labelledby]="'kp-rule-' + rule.id"
+                  (change)="setRule(rule, $any($event.target).checked)"
+                />
+                <span class="kp-switch__track" aria-hidden="true"></span>
+                <span class="kp-switch__label">{{ rule.enabled ? 'Włączona' : 'Wyłączona' }}</span>
+              </label>
+            </li>
+          }
+        </ul>
+      }
+    </ng-template>
+  </div>
+
+  <div ngTabPanel class="kp-tabs__panel" value="wyslane">
+    <ng-template ngTabContent>
+      @if (log.isLoading() && !log.hasValue()) {
+        <kp-skeleton height="240px" radius="var(--kp-radius-lg)" />
+      } @else if (logList().length === 0) {
+        <div class="kp-card">
+          <kp-empty-state icon="inbox" heading="Jeszcze nic nie wysłano" />
+        </div>
+      } @else {
+        <section class="kp-card kp-card--flush">
+          <div class="kp-reminders__table-wrap">
+            <table class="kp-table">
+              <caption class="kp-visually-hidden">Wysłane przypomnienia</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Wysłano</th>
+                  <th scope="col">Odbiorca</th>
+                  <th scope="col">Ocena</th>
+                  <th scope="col">Treść</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of logList(); track entry.id) {
+                  <tr>
+                    <td class="kp-reminders__nowrap">{{ entry.sentAt | kpDate: 'datetime' }}</td>
+                    <td class="kp-reminders__nowrap">{{ entry.recipient.fullName }}</td>
+                    <td class="kp-reminders__nowrap">
+                      <a class="kp-link-button" [routerLink]="['/oceny', entry.caseId]">{{ entry.employeeName }}</a>
+                    </td>
+                    <td>{{ entry.title }}</td>
+                    <td>
+                      @if (entry.readAt) {
+                        <kp-badge tone="success" icon="check">przeczytane {{ entry.readAt | kpDate }}</kp-badge>
+                      } @else {
+                        <kp-badge tone="neutral" [dot]="true">nieprzeczytane</kp-badge>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    </ng-template>
+  </div>
+</div>

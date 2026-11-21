@@ -1,0 +1,149 @@
+<kp-dialog-shell
+  [heading]="stage() === 'opis' ? (editing ? 'Edytuj obserwację' : 'Dodaj obserwację') : 'Zatwierdź powiązania'"
+  [description]="stage() === 'opis' ? undefined : 'Asystent przeczytał opis. Zostaw tylko to, co naprawdę pasuje — decyzja należy do Ciebie.'"
+  titleId="kp-observation-title"
+>
+  @if (stage() === 'opis') {
+    <form class="kp-observation" id="kp-observation-describe" (submit)="$event.preventDefault(); describe()" novalidate>
+      <kp-field label="Data zdarzenia" [field]="f.date">
+        <input kpControl type="date" class="kp-input" [max]="today" [formField]="f.date" />
+      </kp-field>
+      <kp-field label="Zadanie i zachowanie" [field]="f.description">
+        <textarea
+          kpControl
+          class="kp-textarea kp-observation__description"
+          rows="4"
+          placeholder="Co się wydarzyło? Opisz konkretne zachowanie i jego rezultat."
+          [formField]="f.description"
+        ></textarea>
+      </kp-field>
+      <p class="kp-observation__note">AI zaproponuje wskaźniki.<br />Powiązania zatwierdzasz samodzielnie.</p>
+    </form>
+  } @else {
+    <form class="kp-observation" id="kp-observation-links" (submit)="$event.preventDefault(); save()" novalidate>
+      <div class="kp-observation__summary">
+        <p class="kp-observation__summary-head">
+          <span>{{ f.date().value() | kpDate }}</span>
+          <button type="button" class="kp-text-link kp-text-link--sm" (click)="back()">Zmień opis</button>
+        </p>
+        <p class="kp-observation__summary-text">{{ f.description().value() }}</p>
+      </div>
+
+      @if (analysis(); as result) {
+        <div
+          class="kp-status-note"
+          [class.kp-status-note--success]="result.coaching.quality === 'konkretna'"
+          [class.kp-status-note--warning]="result.coaching.quality !== 'konkretna'"
+          role="status"
+        >
+          <p class="kp-status-note__title">{{ quality[result.coaching.quality] }}</p>
+          <p class="kp-status-note__text">{{ result.coaching.message }}</p>
+          @if (result.coaching.flaggedPhrases.length > 0) {
+            <p class="kp-status-note__text">
+              Sformułowania oceniające:
+              @for (phrase of result.coaching.flaggedPhrases; track phrase) {
+                <mark class="kp-observation__flag">„{{ phrase }}”</mark>
+              }
+            </p>
+          }
+          @if (result.coaching.questions.length > 0) {
+            <ul class="kp-observation__questions">
+              @for (question of result.coaching.questions; track $index) {
+                <li>{{ question }}</li>
+              }
+            </ul>
+          }
+        </div>
+      } @else if (analysisFailed()) {
+        <div class="kp-status-note kp-status-note--warning" role="status">
+          <p class="kp-status-note__title">Asystent nie odpowiedział</p>
+          <p class="kp-status-note__text">Wskaż kryteria samodzielnie albo wróć do opisu i spróbuj ponownie.</p>
+        </div>
+      }
+
+      <kp-field label="Tytuł" hint="Krótko — tak, by obserwację łatwo było znaleźć na liście." [field]="f.title">
+        <input kpControl class="kp-input" [formField]="f.title" />
+      </kp-field>
+
+      <kp-field label="Zadanie z OSP" [optionalHint]="true" [field]="f.positionTaskId">
+        <select kpControl class="kp-select" [formField]="f.positionTaskId">
+          <option value="">— bez powiązania —</option>
+          @for (task of tasks; track task.id) {
+            <option [value]="task.id">{{ task.no }}. {{ task.text }}</option>
+          }
+        </select>
+      </kp-field>
+
+      <fieldset class="kp-fieldset kp-observation__group">
+        <legend class="kp-observation__legend">Wskaźniki z modelu kompetencji</legend>
+        <ul class="kp-observation__links" role="list">
+          @for (row of rows(); track row.indicatorId) {
+            <li class="kp-option kp-observation__link" [class.kp-option--selected]="hasIndicator(row.indicatorId)">
+              <input
+                type="checkbox"
+                class="kp-check"
+                [id]="'kp-link-' + row.indicatorId"
+                [checked]="hasIndicator(row.indicatorId)"
+                (change)="toggleIndicator(row.indicatorId)"
+              />
+              <label class="kp-option__body" [for]="'kp-link-' + row.indicatorId">
+                <span class="kp-option__title">
+                  {{ shortName(row.criterionId) }}
+                  @if (row.match; as match) {
+                    <span class="kp-tag">{{ confidence[match.confidence] }}</span>
+                  }
+                </span>
+                <span class="kp-option__text">{{ indicatorText(row.indicatorId) }}</span>
+                @if (row.match && row.match.matchedPhrases.length > 0) {
+                  <span class="kp-observation__basis">na podstawie: {{ row.match.matchedPhrases.join(', ') }}</span>
+                }
+              </label>
+            </li>
+          } @empty {
+            <li class="kp-observation__empty">Asystent nie znalazł pasujących wskaźników — wskaż kryterium poniżej.</li>
+          }
+        </ul>
+      </fieldset>
+
+      <fieldset class="kp-fieldset kp-observation__group">
+        <legend class="kp-observation__legend">Kryteria, których dotyczy</legend>
+        <div class="kp-observation__chips">
+          @for (id of criteria(); track id) {
+            <label class="kp-observation__chip" [class.kp-observation__chip--on]="hasCriterion(id)">
+              <input type="checkbox" class="kp-visually-hidden" [checked]="hasCriterion(id)" (change)="toggleCriterion(id)" />
+              @if (hasCriterion(id)) {
+                <kp-icon name="check" [size]="12" />
+              }
+              {{ shortName(id) }}
+            </label>
+          }
+        </div>
+        @if (attempted() && selectedCriteria().length === 0) {
+          <p class="kp-observation__error" role="alert"><kp-icon name="alert-circle" [size]="14" /> Wskaż co najmniej jedno kryterium.</p>
+        }
+      </fieldset>
+
+      @if (serverIssues().length > 0) {
+        <kp-callout tone="danger" heading="Nie zapisano obserwacji" [live]="true">
+          <ul class="kp-issues">
+            @for (issue of serverIssues(); track issue) {
+              <li>{{ issue }}</li>
+            }
+          </ul>
+        </kp-callout>
+      }
+    </form>
+  }
+
+  <ng-container dialogFooter>
+    @if (stage() === 'opis') {
+      <button type="submit" form="kp-observation-describe" kpButton class="kp-observation__submit" [loading]="analyzing()">Zapisz obserwację</button>
+      @if (editing) {
+        <button type="button" class="kp-text-link kp-text-link--sm kp-text-link--muted kp-observation__remove" (click)="remove()">Usuń obserwację</button>
+      }
+    } @else {
+      <button type="button" kpButton="secondary" (click)="back()">Wróć do opisu</button>
+      <button type="submit" form="kp-observation-links" kpButton [loading]="saving()">{{ editing ? 'Zapisz zmiany' : 'Zatwierdź obserwację' }}</button>
+    }
+  </ng-container>
+</kp-dialog-shell>

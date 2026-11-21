@@ -1,0 +1,126 @@
+@use 'mixins' as m;
+
+// Projekt: 48 px wysokości, 24 px w poziomie, 13 px Medium, promień 12.
+:host {
+  --_bg: var(--kp-color-primary);
+  --_fg: var(--kp-color-text-on-primary);
+  --_border: transparent;
+  --_bg-hover: var(--kp-color-primary-hover);
+  --_fg-hover: var(--_fg);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--kp-space-2);
+  min-height: var(--kp-button-height);
+  padding: 0 var(--kp-space-6);
+  border: 1px solid var(--_border);
+  border-radius: var(--kp-radius-md);
+  background: var(--_bg);
+  color: var(--_fg);
+  font: inherit;
+  font-size: var(--kp-font-size-sm);
+  font-weight: 500;
+  line-height: 24px;
+  letter-spacing: var(--kp-letter-spacing-tight);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  @include m.interactive-transition(background-color, border-color, color, box-shadow);
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    background: var(--_bg-hover);
+    color: var(--_fg-hover);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    @include m.focus-ring;
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+:host(.kp-btn--sm) {
+  min-height: var(--kp-control-height-sm);
+  padding: 0 var(--kp-space-4);
+  border-radius: 10px;
+  font-size: var(--kp-font-size-xs);
+}
+
+:host(.kp-btn--icon-only) {
+  width: var(--kp-button-height);
+  padding: 0;
+}
+
+:host(.kp-btn--icon-only.kp-btn--sm) {
+  width: var(--kp-control-height-sm);
+}
+
+:host(.kp-btn--secondary) {
+  --_bg: var(--kp-color-surface);
+  --_fg: var(--kp-color-primary);
+  --_border: var(--kp-color-primary);
+  --_bg-hover: var(--kp-color-surface-tint);
+}
+
+:host(.kp-btn--ghost) {
+  --_bg: transparent;
+  --_fg: var(--kp-color-text);
+  --_bg-hover: var(--kp-color-surface-tint);
+  --_fg-hover: var(--kp-color-primary);
+}
+
+// „Wstecz” / „Wróć do moich ocen” — tekst podkreślony bez tła, z polem przycisku (wcięcie 24 px jak w projekcie).
+:host(.kp-btn--link) {
+  --_bg: transparent;
+  --_fg: var(--kp-color-text);
+  --_bg-hover: transparent;
+  --_fg-hover: var(--kp-color-primary);
+
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+
+  &:hover:not(:disabled, [aria-disabled='true']) {
+    text-decoration: underline;
+  }
+}
+
+:host(.kp-btn--danger) {
+  --_bg: var(--kp-color-surface);
+  --_fg: var(--kp-color-danger);
+  --_border: var(--kp-color-danger);
+  --_bg-hover: var(--kp-color-danger-bg);
+}
+
+:host(.kp-btn--ai) {
+  --_bg: var(--kp-color-primary-tint);
+  --_fg: var(--kp-color-primary);
+  --_bg-hover: var(--kp-color-primary-tint-strong);
+}
+
+:host(.kp-btn--loading) {
+  cursor: progress;
+}
+
+.kp-btn__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: kp-btn-spin 700ms linear infinite;
+}
+
+@keyframes kp-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

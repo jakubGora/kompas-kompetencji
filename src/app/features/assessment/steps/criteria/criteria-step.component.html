@@ -1,0 +1,68 @@
+<kp-step-frame stepId="kryteria" completeLabel="Zatwierdź kryteria i przejdź dalej" [draftable]="true">
+  <div class="kp-criteria">
+    <section class="kp-card kp-criteria__card" aria-labelledby="kp-mandatory-title">
+      <header class="kp-criteria__header">
+        <div>
+          <h2 class="kp-criteria__title" id="kp-mandatory-title">Obowiązkowe</h2>
+          <p class="kp-criteria__subtitle">{{ mandatory().length }} kryteriów</p>
+        </div>
+      </header>
+      <ul class="kp-criteria__list">
+        @for (id of mandatory(); track id) {
+          <li class="kp-option kp-option--mandatory">
+            <span class="kp-option__title">{{ name(id) }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="kp-card kp-criteria__card" aria-labelledby="kp-additional-title">
+      <header class="kp-criteria__header">
+        <div>
+          <h2 class="kp-criteria__title" id="kp-additional-title">Dodatkowe kryteria</h2>
+          <p class="kp-criteria__subtitle">Kryteria wybrane przez oceniającego</p>
+        </div>
+        <p class="kp-criteria__count" aria-live="polite">Wybrano {{ selected().length }} z {{ max }} możliwych</p>
+      </header>
+
+      <ul class="kp-criteria__list kp-criteria__list--compact">
+        @for (row of rows(); track row.id) {
+          <li class="kp-option">
+            <input
+              type="checkbox"
+              class="kp-check"
+              [id]="'kp-additional-' + row.id"
+              [checked]="row.selected"
+              [disabled]="!editable() || (!row.selected && limitReached())"
+              (change)="toggle(row.id, $event)"
+            />
+            <label class="kp-option__body" [for]="'kp-additional-' + row.id">
+              <span class="kp-option__title">{{ name(row.id) }}</span>
+              @if (!row.selected) {
+                <span class="kp-option__text">Propozycja asystenta z OSP — zaznacz, aby dodać</span>
+              }
+            </label>
+            @if (editable()) {
+              <button
+                type="button"
+                class="kp-text-link kp-text-link--sm kp-text-link--plain"
+                [attr.aria-label]="'Edytuj: ' + name(row.id)"
+                (click)="openPicker(row.id)"
+              >
+                Edytuj
+              </button>
+            }
+          </li>
+        } @empty {
+          <li class="kp-criteria__empty">Nie wybrano kryteriów dodatkowych — to dopuszczalne, jeśli zadania na stanowisku ich nie wymagają.</li>
+        }
+      </ul>
+
+      @if (editable() && !limitReached()) {
+        <button type="button" kpButton class="kp-criteria__add" (click)="openPicker()">
+          {{ selected().length === 0 ? 'Dodaj kryteria' : 'Dodaj kolejne' }}
+        </button>
+      }
+    </section>
+  </div>
+</kp-step-frame>

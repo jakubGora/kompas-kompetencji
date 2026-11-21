@@ -1,0 +1,205 @@
+<kp-page-header
+  eyebrow="Przepisy · poradniki · model kompetencji"
+  heading="Baza wiedzy"
+  description="Asystent odpowiada wyłącznie na podstawie tych źródeł i zawsze podaje cytat. Gdy źródła nie rozstrzygają sprawy, mówi to wprost."
+/>
+
+<div ngTabs>
+  <div ngTabList class="kp-tabs__list" [(selectedTab)]="tab" aria-label="Sekcje bazy wiedzy">
+    <button ngTab type="button" class="kp-tabs__tab" value="asystent"><kp-icon name="sparkles" [size]="16" /> Asystent</button>
+    <button ngTab type="button" class="kp-tabs__tab" value="zrodla">
+      <kp-icon name="book" [size]="16" /> Źródła <span class="kp-tabs__count">{{ sourceList().length }}</span>
+    </button>
+    <button ngTab type="button" class="kp-tabs__tab" value="model">
+      <kp-icon name="layers" [size]="16" /> Model kompetencji <span class="kp-tabs__count">{{ modelStats().competencies }}</span>
+    </button>
+  </div>
+
+  <div ngTabPanel class="kp-tabs__panel" value="asystent">
+    <ng-template ngTabContent>
+      <div class="kp-knowledge__assistant">
+        <kp-assistant-panel [embedded]="true" contextLabel="Pytania ogólne — bez kontekstu konkretnej oceny" />
+        <aside class="kp-stack">
+          <section class="kp-card kp-card--tint">
+            <h2 class="kp-card__title">Jak pracuje asystent</h2>
+            <ul class="kp-knowledge__rules">
+              <li><kp-icon name="quote" [size]="16" /> Każda odpowiedź ma cytat i lokalizację w źródle — kliknij, aby zobaczyć pełny fragment.</li>
+              <li><kp-icon name="alert" [size]="16" /> Gdy w źródłach nie ma podstawy, dostaniesz komunikat „brak podstawy w źródłach”, a nie zgadywanie.</li>
+              <li><kp-icon name="messages" [size]="16" /> Tryb „rozmowa” pomaga przygotować pytania do rozmowy — nie ocenia osoby.</li>
+              <li><kp-icon name="shield" [size]="16" /> Działa offline na fikcyjnych danych; nie wysyła treści ocen poza aplikację.</li>
+            </ul>
+          </section>
+          <section class="kp-card">
+            <h2 class="kp-card__title">Źródła w bazie</h2>
+            @if (sources.isLoading() && !sources.hasValue()) {
+              <kp-skeleton height="120px" />
+            } @else {
+              <ul class="kp-knowledge__mini-sources">
+                @for (source of sourceList(); track source.id) {
+                  <li>
+                    <kp-badge [tone]="kindTone[source.kind]">{{ kindLabel[source.kind] }}</kp-badge>
+                    <span>{{ source.shortTitle }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </aside>
+      </div>
+    </ng-template>
+  </div>
+
+  <div ngTabPanel class="kp-tabs__panel" value="zrodla">
+    <ng-template ngTabContent>
+      <div class="kp-knowledge__sources">
+        <nav class="kp-knowledge__source-nav" aria-label="Filtr źródeł">
+          <button type="button" class="kp-knowledge__source" [attr.aria-pressed]="sourceId() === null" (click)="sourceId.set(null)">
+            <span class="kp-knowledge__source-title">Wszystkie źródła</span>
+            <span class="kp-knowledge__source-meta">{{ sourceList().length | kpPlural: ['dokument', 'dokumenty', 'dokumentów'] }}</span>
+          </button>
+          @for (source of sourceList(); track source.id) {
+            <button type="button" class="kp-knowledge__source" [attr.aria-pressed]="sourceId() === source.id" (click)="selectSource(source.id)">
+              <kp-badge [tone]="kindTone[source.kind]">{{ kindLabel[source.kind] }}</kp-badge>
+              <span class="kp-knowledge__source-title">{{ source.shortTitle }}</span>
+              <span class="kp-knowledge__source-meta">{{ source.fragmentCount | kpPlural: ['fragment', 'fragmenty', 'fragmentów'] }}</span>
+            </button>
+          }
+        </nav>
+
+        <section class="kp-stack" aria-labelledby="kp-fragments-title">
+          <div class="kp-knowledge__search-row">
+            <label class="kp-input-group kp-knowledge__search">
+              <kp-icon name="search" [size]="16" />
+              <input
+                class="kp-input"
+                type="search"
+                placeholder="Szukaj w treści, np. „sprzeciw”, „termin”, „brak podstaw”"
+                aria-label="Szukaj we fragmentach źródeł"
+                [value]="query()"
+                (input)="query.set($any($event.target).value)"
+              />
+            </label>
+            @if (query() || sourceId()) {
+              <button type="button" kpButton="ghost" size="sm" icon="x" (click)="clearSearch()">Wyczyść</button>
+            }
+          </div>
+
+          @if (selectedSource(); as source) {
+            <div class="kp-card kp-card--muted kp-knowledge__source-info">
+              <h2 class="kp-card__title" id="kp-fragments-title">{{ source.title }}</h2>
+              <p class="kp-card__subtitle">{{ source.reference }}</p>
+              <p class="kp-text-sm">{{ source.description }}</p>
+              @if (source.kind === 'regula-narzedzia') {
+                <kp-callout tone="warning" heading="To nie jest przepis">Reguły narzędzia opisują, jak Kompas liczy sugestie. Można je zmienić w konfiguracji.</kp-callout>
+              }
+            </div>
+          } @else {
+            <h2 class="kp-visually-hidden" id="kp-fragments-title">Fragmenty źródeł</h2>
+          }
+
+          @if (fragments.isLoading() && !fragments.hasValue()) {
+            <kp-skeleton height="160px" radius="var(--kp-radius-lg)" />
+          } @else if (fragmentList().length === 0) {
+            <div class="kp-card">
+              <kp-empty-state [compact]="true" icon="search" heading="Brak fragmentów" description="Zmień frazę albo wybierz inne źródło." />
+            </div>
+          } @else {
+            <p class="kp-muted kp-text-xs" aria-live="polite">{{ fragmentList().length | kpPlural: ['fragment', 'fragmenty', 'fragmentów'] }}</p>
+            <ul class="kp-knowledge__fragments">
+              @for (fragment of fragmentList(); track fragment.id) {
+                <li>
+                  <button type="button" class="kp-knowledge__fragment" (click)="openFragment(fragment)">
+                    <span class="kp-knowledge__fragment-head">
+                      <span class="kp-knowledge__locator">{{ fragment.locator }}</span>
+                      <span class="kp-knowledge__fragment-source">{{ sourceNames().get(fragment.sourceId) }}</span>
+                    </span>
+                    <span class="kp-knowledge__fragment-title">{{ fragment.heading }}</span>
+                    <span class="kp-knowledge__fragment-text">{{ fragment.text }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+    </ng-template>
+  </div>
+
+  <div ngTabPanel class="kp-tabs__panel" value="model">
+    <ng-template ngTabContent>
+      @if (!reference.model()) {
+        @if (reference.error()) {
+          <div class="kp-card">
+            <kp-empty-state icon="alert-circle" heading="Nie udało się wczytać modelu kompetencji">
+              <button type="button" kpButton icon="reset" (click)="reference.reload()">Spróbuj ponownie</button>
+            </kp-empty-state>
+          </div>
+        } @else {
+          <kp-skeleton height="320px" radius="var(--kp-radius-lg)" />
+        }
+      } @else {
+        <div class="kp-knowledge__model-head">
+          <div class="kp-cluster">
+            <span class="kp-chip kp-chip--primary">{{ modelStats().competencies }} kompetencji</span>
+            <span class="kp-chip">{{ modelStats().indicators }} wskaźników</span>
+            <span class="kp-chip">{{ modelStats().behaviors }} opisów zachowań</span>
+          </div>
+          <label class="kp-input-group kp-knowledge__search">
+            <kp-icon name="search" [size]="16" />
+            <input
+              class="kp-input kp-input--sm"
+              type="search"
+              placeholder="Szukaj kompetencji, wskaźnika lub zachowania"
+              aria-label="Szukaj w modelu kompetencji"
+              [value]="modelQuery()"
+              (input)="modelQuery.set($any($event.target).value)"
+            />
+          </label>
+        </div>
+
+        <kp-callout tone="info" icon="info" heading="Jak czytać model">
+          Poziomy 1–5 to kolejność opisów zachowań, nie punkty oceny. Poziom 3 opisuje standard „na poziomie oczekiwań”.
+          Źródło nie określa sposobu łączenia wskaźników w ocenę — Kompas robi to jawną, konfigurowalną regułą narzędzia.
+        </kp-callout>
+
+        @if (competencies().length === 0) {
+          <div class="kp-card">
+            <kp-empty-state [compact]="true" icon="search" heading="Nic nie pasuje do wyszukiwania" />
+          </div>
+        }
+
+        <div class="kp-knowledge__model">
+          @for (item of competencies(); track item.competency.id) {
+            <details class="kp-card kp-knowledge__competency" [open]="modelQuery().trim().length > 0">
+              <summary class="kp-knowledge__competency-summary">
+                <span class="kp-knowledge__competency-id">{{ item.competency.id.toUpperCase() }}</span>
+                <span class="kp-knowledge__competency-name">{{ item.name }}</span>
+                <span class="kp-muted kp-text-xs">{{ item.indicators.length | kpPlural: ['wskaźnik', 'wskaźniki', 'wskaźników'] }}</span>
+                <kp-icon class="kp-knowledge__chevron" name="chevron-down" [size]="18" />
+              </summary>
+              <ol class="kp-knowledge__indicators">
+                @for (indicator of item.indicators; track indicator.id) {
+                  <li class="kp-knowledge__indicator">
+                    <p class="kp-knowledge__indicator-text">{{ indicator.text }}</p>
+                    <ol class="kp-knowledge__behaviors">
+                      @for (behavior of indicator.behaviors; track behavior.level_index) {
+                        <li class="kp-knowledge__behavior" [class.kp-knowledge__behavior--expected]="behavior.level_index === 3">
+                          <span class="kp-knowledge__level">{{ behavior.level_index }}</span>
+                          <span>
+                            <strong>{{ behavior.label }}</strong>
+                            {{ behavior.description }}
+                          </span>
+                        </li>
+                      }
+                    </ol>
+                    <p class="kp-legal">Arkusz „{{ indicator.source.sheet }}”, zakres {{ indicator.source.range }}</p>
+                  </li>
+                }
+              </ol>
+            </details>
+          }
+        </div>
+      }
+    </ng-template>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+<a class="kp-skip-link" href="#kp-main">Przejdź do treści</a>
+
+@if (session.user(); as user) {
+  <div class="kp-shell">
+    <kp-sidebar class="kp-shell__sidebar" [user]="user" id="kp-sidebar" />
+    @if (navOpen()) {
+      <div class="kp-shell__scrim" (click)="navOpen.set(false)" aria-hidden="true"></div>
+    }
+    <div class="kp-shell__main">
+      <kp-topbar class="kp-shell__topbar" [navOpen]="navOpen()" (toggleNav)="navOpen.update((open) => !open)" />
+      <main id="kp-main" class="kp-shell__content" tabindex="-1">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+} @else if (session.loadFailed()) {
+  <main class="kp-shell__fatal">
+    <kp-empty-state
+      icon="alert-circle"
+      heading="Nie udało się połączyć z serwerem"
+      description="Sprawdź połączenie i spróbuj ponownie. Twoje dane nie zostały utracone."
+    >
+      <button type="button" kpButton icon="reset" (click)="retry()">Spróbuj ponownie</button>
+    </kp-empty-state>
+  </main>
+}

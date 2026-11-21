@@ -1,0 +1,212 @@
+.kp-reminders__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--kp-space-5);
+  align-items: start;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.kp-reminders__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--kp-space-3);
+  padding: var(--kp-space-4) var(--kp-space-5);
+  border-bottom: 1px solid var(--kp-color-border-subtle);
+  font-size: var(--kp-font-size-sm);
+}
+
+.kp-reminders__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kp-reminders__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--kp-space-2) var(--kp-space-4);
+  padding: var(--kp-space-4) var(--kp-space-5);
+  transition: background-color var(--kp-duration-fast) ease;
+
+  & + & {
+    border-top: 1px solid var(--kp-color-border-subtle);
+  }
+
+  &--selected {
+    background: var(--kp-color-surface-selected);
+  }
+}
+
+.kp-reminders__check {
+  grid-column: 1;
+}
+
+.kp-reminders__title {
+  font-weight: var(--kp-font-weight-medium);
+}
+
+.kp-reminders__body {
+  grid-column: 1;
+  padding-inline-start: 26px;
+}
+
+.kp-reminders__message {
+  font-size: var(--kp-font-size-sm);
+}
+
+.kp-reminders__meta {
+  margin-top: var(--kp-space-1);
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-2xs);
+}
+
+.kp-reminders__side {
+  display: flex;
+  flex-direction: column;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-items: flex-end;
+  gap: var(--kp-space-2);
+
+  @media (max-width: 640px) {
+    flex-direction: row;
+    flex-wrap: wrap;
+    grid-column: 1;
+    grid-row: auto;
+    align-items: center;
+    padding-inline-start: 26px;
+  }
+}
+
+.kp-reminders__compose {
+  position: sticky;
+  top: calc(var(--kp-space-6) + 64px);
+  display: grid;
+  gap: var(--kp-space-3);
+}
+
+.kp-reminders__note-label {
+  font-size: var(--kp-font-size-sm);
+  font-weight: var(--kp-font-weight-medium);
+}
+
+.kp-reminders__counter {
+  margin-top: calc(var(--kp-space-2) * -1);
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-2xs);
+  text-align: end;
+}
+
+.kp-reminders__table-wrap {
+  overflow-x: auto;
+}
+
+.kp-reminders__nowrap {
+  white-space: nowrap;
+}
+
+.kp-rules {
+  display: grid;
+  gap: var(--kp-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kp-rules__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--kp-space-4);
+}
+
+.kp-rules__text {
+  display: grid;
+  flex: 1 1 360px;
+  gap: var(--kp-space-2);
+}
+
+.kp-rules__name {
+  margin: 0;
+  font-size: var(--kp-font-size-md);
+  font-weight: var(--kp-font-weight-semibold);
+}
+
+.kp-rules__description {
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-sm);
+}
+
+.kp-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kp-space-2);
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    width: 44px;
+    height: 24px;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  &:has(input:disabled) {
+    cursor: progress;
+    opacity: 0.6;
+  }
+}
+
+.kp-switch__track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: var(--kp-radius-pill);
+  background: var(--kp-color-border-strong);
+  transition: background-color var(--kp-duration-fast) ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--kp-color-surface);
+    box-shadow: var(--kp-shadow-xs);
+    transition: transform var(--kp-duration-fast) var(--kp-ease-standard);
+  }
+
+  input:checked + & {
+    background: var(--kp-color-primary);
+
+    &::after {
+      transform: translateX(20px);
+    }
+  }
+
+  input:focus-visible + & {
+    outline: 2px solid var(--kp-focus-outline-color);
+    outline-offset: 2px;
+  }
+}
+
+.kp-switch__label {
+  min-width: 72px;
+  font-size: var(--kp-font-size-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kp-switch__track,
+  .kp-switch__track::after {
+    transition: none;
+  }
+}

@@ -1,0 +1,161 @@
+<kp-step-frame
+  stepId="rozmowa-oceniajaca"
+  completeLabel="Zapisz wnioski i przejdź do ocen"
+  nextLabel="Przejdź do oceny kompetencji"
+  [completedNote]="false"
+  [draftable]="true"
+>
+  @if (store.redacted()) {
+    <kp-callout tone="neutral" icon="lock" heading="Widok kadr">
+      Treść rozmowy i wniosków widzi tylko oceniający. Kadry mają dostęp do terminów i dokumentu końcowego.
+    </kp-callout>
+  } @else {
+    <div class="kp-review" [class.kp-print-root]="!!plan()">
+      <section class="kp-review__agenda" aria-labelledby="kp-agenda-title">
+        <div class="kp-review__agenda-head">
+          <h2 class="kp-review__agenda-title" id="kp-agenda-title">Agenda rozmowy</h2>
+          <span class="kp-tag">{{ agendaRef() }}</span>
+        </div>
+        <ul class="kp-review__agenda-list">
+          @for (topic of topics(); track topic.id) {
+            <li class="kp-option kp-option--mandatory">
+              <input
+                type="checkbox"
+                class="kp-check"
+                [id]="'kp-review-topic-' + topic.id"
+                [checked]="topicChecked(topic.id)"
+                [disabled]="!editable()"
+                (change)="toggleTopic(topic.id, $event)"
+              />
+              <label class="kp-option__body" [for]="'kp-review-topic-' + topic.id">
+                <span class="kp-option__title">{{ topic.shortLabel }}</span>
+                <span class="kp-option__text">{{ topic.label }}</span>
+              </label>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="kp-review__questions" aria-labelledby="kp-questions-title">
+        <div class="kp-review__questions-head">
+          <div>
+            <h2 class="kp-section-title kp-section-title--sm" id="kp-questions-title">Pytania o konkretne sytuacje</h2>
+            <p class="kp-muted kp-text-sm">Asystent układa pytania z obserwacji i oczekiwań — decyzja o przebiegu rozmowy należy do Ciebie.</p>
+          </div>
+          @if (editable()) {
+            <button
+              type="button"
+              kpButton="secondary"
+              icon="sparkles"
+              class="kp-no-print"
+              [loading]="store.busy() === 'plan'"
+              (click)="prepare()"
+            >
+              {{ plan() ? 'Odśwież pytania' : 'Przygotuj mnie do rozmowy' }}
+            </button>
+          }
+        </div>
+
+        @if (questionCards().length > 0) {
+          <div class="kp-review__grid">
+            @for (card of questionCards(); track card.id) {
+              <article class="kp-review__card">
+                <header class="kp-review__card-head">
+                  <h3 class="kp-review__card-title">{{ card.name }}</h3>
+                  <div class="kp-cluster">
+                    @if (card.facts > 0) {
+                      <span class="kp-chip">{{ card.facts }} {{ card.facts === 1 ? 'fakt' : 'fakty' }}</span>
+                    }
+                    @if (card.gaps > 0) {
+                      <span class="kp-chip">{{ card.gaps }} {{ card.gaps === 1 ? 'luka' : 'luki' }}</span>
+                    }
+                  </div>
+                </header>
+                <ol class="kp-review__q-list">
+                  @for (question of card.questions; track $index) {
+                    <li>{{ question }}</li>
+                  }
+                </ol>
+              </article>
+            }
+          </div>
+          @if (plan()?.developmentQuestions?.length) {
+            <article class="kp-review__card kp-review__card--wide">
+              <h3 class="kp-review__card-title">Kierunki rozwoju</h3>
+              <ol class="kp-review__q-list">
+                @for (question of plan()!.developmentQuestions; track $index) {
+                  <li>{{ question }}</li>
+                }
+              </ol>
+            </article>
+          }
+        } @else {
+          <div class="kp-review__empty">
+            <kp-icon name="messages" [size]="20" />
+            <p>
+              @if (editable()) {
+                Kliknij „Przygotuj mnie do rozmowy”, żeby dostać pytania oparte na obserwacjach {{ employeeFirst() }}.
+              } @else {
+                Brak przygotowanych pytań do tej rozmowy.
+              }
+            </p>
+          </div>
+        }
+      </section>
+
+      <section class="kp-review__form" aria-label="Ustalenia z rozmowy">
+        <div class="kp-review__form-row">
+          <kp-field label="Data rozmowy" [field]="f.meetingDate">
+            <input kpControl type="date" class="kp-input" [formField]="f.meetingDate" />
+            @if (editable() && !f.meetingDate().value()) {
+              <button type="button" fieldAside class="kp-link-button" (click)="setToday()">Dzisiaj</button>
+            }
+          </kp-field>
+          @if (isFirst()) {
+            <label class="kp-checkbox kp-review__head">
+              <input type="checkbox" [formField]="f.headOfUnitPresent" />
+              W rozmowie uczestniczył kierujący komórką
+            </label>
+          }
+        </div>
+
+        <kp-field label="Wnioski z rozmowy" [field]="f.notes" hint="Najważniejsze ustalenia, perspektywa ocenianej osoby i kierunki rozwoju.">
+          <textarea
+            kpControl
+            class="kp-textarea kp-review__notes"
+            rows="4"
+            placeholder="Np. Uzgodniliśmy udział w ćwiczeniach z komunikacji kryzysowej i wzmocnienie współpracy międzyresortowej."
+            [formField]="f.notes"
+          ></textarea>
+        </kp-field>
+
+        @if (!store.redacted()) {
+          <details class="kp-review__more">
+            <summary>Dodatkowe notatki (opcjonalnie)</summary>
+            <div class="kp-review__more-body">
+              <kp-field label="Perspektywa ocenianego" [field]="f.employeePerspective" [optionalHint]="true">
+                <textarea kpControl class="kp-textarea" rows="2" [formField]="f.employeePerspective"></textarea>
+              </kp-field>
+              <kp-field label="Potrzeby rozwojowe" [field]="f.developmentNeeds" [optionalHint]="true">
+                <textarea kpControl class="kp-textarea" rows="2" [formField]="f.developmentNeeds"></textarea>
+              </kp-field>
+            </div>
+          </details>
+        }
+      </section>
+    </div>
+  }
+
+  <button
+    stepActions
+    type="button"
+    kpButton="secondary"
+    icon="printer"
+    class="kp-no-print"
+    [loading]="store.busy() === 'document' || store.busy() === 'plan'"
+    [disabled]="store.redacted()"
+    (click)="downloadCard()"
+  >
+    Pobierz kartę rozmowy
+  </button>
+</kp-step-frame>

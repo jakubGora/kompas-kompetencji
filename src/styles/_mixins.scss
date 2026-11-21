@@ -1,0 +1,119 @@
+// Współdzielone mixiny SCSS. Wartości wizualne pochodzą z tokenów CSS (_tokens.scss).
+@use 'sass:map';
+
+$breakpoints: (
+  sm: 640px,
+  md: 900px,
+  lg: 1200px,
+  xl: 1440px,
+);
+
+@mixin up($name) {
+  @media (min-width: map.get($breakpoints, $name)) {
+    @content;
+  }
+}
+
+@mixin down($name) {
+  @media (max-width: calc(map.get($breakpoints, $name) - 0.02px)) {
+    @content;
+  }
+}
+
+@mixin focus-ring {
+  outline: 2px solid var(--kp-focus-outline-color);
+  outline-offset: 2px;
+}
+
+@mixin visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lines;
+  line-clamp: $lines;
+  overflow: hidden;
+}
+
+@mixin surface($radius: var(--kp-radius-lg)) {
+  background: var(--kp-color-surface);
+  border-radius: $radius;
+}
+
+@mixin eyebrow {
+  font-size: var(--kp-font-size-3xs);
+  font-weight: var(--kp-font-weight-medium);
+  letter-spacing: var(--kp-letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--kp-color-text-muted);
+}
+
+// Wąski fioletowy pasek przewijania list (projekt: 5 px, tor #f4eefc), widoczny stale.
+// Chromium i Safari biorą style -webkit- tylko wtedy, gdy nie ustawiono `scrollbar-width`/`scrollbar-color` —
+// te zostają dla Firefoksa.
+@mixin scrollbar {
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--kp-color-primary) var(--kp-color-surface-tint);
+  }
+
+  &::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    border-radius: var(--kp-radius-xs);
+    background: var(--kp-color-surface-tint);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: var(--kp-radius-xs);
+    background: var(--kp-color-primary);
+  }
+}
+
+// Podkreślony link tekstowy („Otwórz”, „Edytuj”, „Zmień”).
+@mixin text-link($color: var(--kp-color-primary)) {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $color;
+  font: inherit;
+  font-weight: var(--kp-font-weight-medium);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--kp-color-primary-hover);
+  }
+
+  &:disabled {
+    color: var(--kp-color-text-muted);
+    cursor: not-allowed;
+  }
+}
+
+@mixin interactive-transition($props...) {
+  transition-property: $props;
+  transition-duration: var(--kp-duration-base);
+  transition-timing-function: var(--kp-ease-standard);
+}

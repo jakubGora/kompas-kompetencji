@@ -1,0 +1,150 @@
+@use 'mixins' as m;
+
+// Projekt: baner terminu (75 px) → nagłówek z przyciskiem (48 px) → przewijana lista kart 80 px co 17 px.
+$list-gutter: 22px;
+
+.kp-observations {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.kp-observations__deadline {
+  display: grid;
+  gap: 4px;
+  padding: 17px var(--kp-space-6) 18px;
+  border-radius: var(--kp-radius-lg);
+  background: var(--kp-color-surface-tint);
+}
+
+.kp-observations__deadline-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 10px;
+  margin: 0;
+  color: var(--kp-color-primary);
+  font-size: var(--kp-font-size-xl);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.kp-observations__deadline-text {
+  margin: 0;
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-2xs);
+}
+
+.kp-observations__section {
+  display: grid;
+  gap: 17px;
+  margin-top: 21px;
+}
+
+.kp-observations__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--kp-space-3);
+  padding-right: $list-gutter;
+}
+
+.kp-observations__title {
+  margin: 0;
+  font-size: var(--kp-font-size-xl);
+  font-weight: 500;
+}
+
+.kp-observations__list {
+  display: grid;
+  gap: 17px;
+  max-height: max(240px, calc(100dvh - 576px));
+  margin: 0;
+  padding: 0 17px 0 0;
+  overflow-y: auto;
+  list-style: none;
+  scrollbar-gutter: stable;
+  @include m.scrollbar;
+
+  &:focus-visible {
+    @include m.focus-ring;
+  }
+}
+
+.kp-observation-card {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 12px var(--kp-space-4) 13px;
+  border-radius: var(--kp-radius-md);
+  background: var(--kp-color-surface);
+
+  &--interactive {
+    @include m.interactive-transition(box-shadow);
+
+    &:hover {
+      box-shadow: inset 0 0 0 1px var(--kp-color-primary-border);
+    }
+
+    &:has(.kp-observation-card__open:focus-visible) {
+      @include m.focus-ring;
+    }
+  }
+}
+
+.kp-observation-card__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--kp-space-3);
+  margin: 0;
+  font-size: var(--kp-font-size-3xs);
+}
+
+.kp-observation-card__date {
+  color: var(--kp-color-text-muted);
+}
+
+.kp-observation-card__criteria {
+  color: var(--kp-color-primary);
+  text-align: end;
+}
+
+.kp-observation-card__title {
+  margin: 0;
+  font-size: var(--kp-font-size-sm);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+// Cała karta otwiera edycję (rozciągnięty przycisk tytułu).
+.kp-observation-card__open {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.kp-observation-card__text {
+  margin: 0;
+  font-size: var(--kp-font-size-3xs);
+  line-height: 1.5;
+  @include m.line-clamp(2);
+}
+
+.kp-observations__empty {
+  margin-right: $list-gutter;
+}

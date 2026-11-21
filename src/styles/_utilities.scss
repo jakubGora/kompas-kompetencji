@@ -1,0 +1,131 @@
+@use 'mixins' as *;
+
+// Minimalny zestaw klas pomocniczych. Układ ekranów opisują style komponentów.
+
+.kp-visually-hidden {
+  @include visually-hidden;
+}
+
+.kp-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--kp-stack-gap, var(--kp-space-4));
+}
+
+.kp-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--kp-cluster-gap, var(--kp-space-2));
+}
+
+.kp-muted {
+  color: var(--kp-color-text-muted);
+}
+
+.kp-text-xs {
+  font-size: var(--kp-font-size-2xs);
+}
+
+.kp-text-sm {
+  font-size: var(--kp-font-size-xs);
+}
+
+.kp-eyebrow {
+  @include eyebrow;
+}
+
+.kp-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.kp-scroll {
+  overflow: auto;
+  @include scrollbar;
+}
+
+// Podkreślony link tekstowy z projektu („Otwórz”, „Edytuj”, „Zmień”).
+.kp-text-link {
+  @include text-link;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kp-space-1);
+  font-size: var(--kp-font-size-xs);
+
+  &--sm {
+    font-size: var(--kp-font-size-2xs);
+  }
+
+  &--muted {
+    color: var(--kp-color-text-muted);
+    font-weight: var(--kp-font-weight-regular);
+  }
+
+  &--plain {
+    color: var(--kp-color-text);
+  }
+}
+
+.kp-link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--kp-space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--kp-color-primary);
+  font-weight: var(--kp-font-weight-medium);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--kp-color-primary-hover);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+  }
+}
+
+// Tabela z projektu: nagłówki 11 px, wiersze 50 px, separatory na całą szerokość.
+.kp-table {
+  width: 100%;
+  font-size: var(--kp-font-size-xs);
+
+  th {
+    padding: var(--kp-space-3) var(--kp-space-4);
+    border-bottom: 1px solid var(--kp-color-border);
+    color: var(--kp-color-text-muted);
+    font-size: var(--kp-font-size-2xs);
+    font-weight: var(--kp-font-weight-medium);
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  td {
+    height: 50px;
+    padding: var(--kp-space-2) var(--kp-space-4);
+    border-bottom: 1px solid var(--kp-color-border);
+    vertical-align: middle;
+  }
+
+  th:first-child,
+  td:first-child {
+    padding-inline-start: var(--kp-space-6);
+  }
+
+  th:last-child,
+  td:last-child {
+    padding-inline-end: var(--kp-space-6);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr {
+    @include interactive-transition(background-color);
+
+    &:hover {
+      background: var(--kp-color-surface-hover);
+    }
+  }
+}

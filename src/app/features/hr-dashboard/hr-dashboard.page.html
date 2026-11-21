@@ -1,0 +1,230 @@
+<kp-page-header
+  [eyebrow]="session.office()?.name ?? 'Kadry'"
+  heading="Procesy ocen"
+  description="Przebieg i terminy wszystkich ocen w urzędzie. Treść obserwacji i uzasadnień widzi wyłącznie oceniający."
+>
+  <button pageActions type="button" kpButton="secondary" icon="download" [disabled]="filtered().length === 0" (click)="exportCsv()">Eksport CSV</button>
+  <button pageActions type="button" kpButton icon="play" [disabled]="!employees.hasValue()" (click)="openStart()">Uruchom ocenę</button>
+</kp-page-header>
+
+@if (cases.isLoading() && !cases.hasValue()) {
+  <div class="kp-hr" aria-busy="true">
+    <div class="kp-grid kp-grid--4">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <kp-skeleton height="96px" radius="var(--kp-radius-lg)" />
+      }
+    </div>
+    <kp-skeleton height="320px" radius="var(--kp-radius-lg)" />
+  </div>
+} @else if (cases.error()) {
+  <div class="kp-card">
+    <kp-empty-state icon="alert-circle" heading="Nie udało się wczytać procesów" description="Spróbuj ponownie za chwilę.">
+      <button type="button" kpButton icon="reset" (click)="cases.reload()">Spróbuj ponownie</button>
+    </kp-empty-state>
+  </div>
+} @else {
+  <div class="kp-hr">
+    <section class="kp-grid kp-grid--4" aria-label="Podsumowanie">
+      <button type="button" class="kp-card kp-hr__kpi" [class.kp-hr__kpi--active]="statusFilter() === 'w-toku'" (click)="setStatus(statusFilter() === 'w-toku' ? 'all' : 'w-toku')">
+        <span class="kp-kpi__value">{{ active().length }}</span>
+        <span class="kp-kpi__label">ocen w toku</span>
+      </button>
+      <button type="button" class="kp-card kp-hr__kpi kp-hr__kpi--warning" [class.kp-hr__kpi--active]="statusFilter() === 'uwaga'" (click)="setStatus(statusFilter() === 'uwaga' ? 'all' : 'uwaga')">
+        <span class="kp-kpi__value">{{ needsAttention().length }}</span>
+        <span class="kp-kpi__label">wymaga uwagi</span>
+      </button>
+      <div class="kp-card kp-hr__kpi kp-hr__kpi--danger">
+        <span class="kp-kpi__value">{{ overdueCount() }}</span>
+        <span class="kp-kpi__label">po terminie</span>
+      </div>
+      <button type="button" class="kp-card kp-hr__kpi kp-hr__kpi--success" [class.kp-hr__kpi--active]="statusFilter() === 'zakonczona'" (click)="setStatus(statusFilter() === 'zakonczona' ? 'all' : 'zakonczona')">
+        <span class="kp-kpi__value">{{ completedThisYear() }}</span>
+        <span class="kp-kpi__label">zakończonych w {{ session.today().slice(0, 4) }}</span>
+      </button>
+    </section>
+
+    <div class="kp-hr__columns">
+      <section class="kp-card" aria-labelledby="kp-attention-title">
+        <div class="kp-card__header">
+          <div>
+            <h2 class="kp-card__title" id="kp-attention-title">Wymaga uwagi</h2>
+            <p class="kp-card__subtitle">Terminy z ustawy i rozporządzeń, które mijają lub już minęły.</p>
+          </div>
+          <a kpButton="ghost" size="sm" icon="bell-ring" routerLink="/przypomnienia">Przypomnienia</a>
+        </div>
+        @if (needsAttention().length === 0) {
+          <kp-empty-state [compact]="true" icon="check-circle" heading="Wszystko w terminie" description="Żadna ocena nie wymaga teraz interwencji kadr." />
+        } @else {
+          <ul class="kp-hr__list">
+            @for (summary of needsAttention(); track summary.id) {
+              <li class="kp-hr__item">
+                <kp-avatar [name]="summary.employee.fullName" [size]="36" />
+                <div class="kp-hr__item-main">
+                  <a class="kp-hr__item-link" [routerLink]="['/oceny', summary.id]">{{ summary.employee.fullName }}</a>
+                  <p class="kp-hr__item-meta">{{ summary.nextActionLabel }} · {{ summary.evaluator.fullName }}</p>
+                  <div class="kp-cluster">
+                    @for (reason of summary.attention; track reason) {
+                      <kp-badge [tone]="attentionInfo[reason].tone" [icon]="attentionInfo[reason].icon">{{ attentionInfo[reason].label }}</kp-badge>
+                    }
+                  </div>
+                </div>
+                <div class="kp-hr__item-side">
+                  @if (summary.nextActionDue; as due) {
+                    <kp-due-chip [date]="due" />
+                  }
+                  <button type="button" kpButton="secondary" size="sm" icon="bell" (click)="remind(summary)">Przypomnij</button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section class="kp-card" aria-labelledby="kp-start-list-title">
+        <div class="kp-card__header">
+          <div>
+            <h2 class="kp-card__title" id="kp-start-list-title">Do uruchomienia</h2>
+            <p class="kp-card__subtitle">Kolejne cykle w ciągu 90 dni — na podstawie dat zatrudnienia i poprzednich ocen.</p>
+          </div>
+        </div>
+        @if (employees.isLoading() && !employees.hasValue()) {
+          <kp-skeleton height="120px" />
+        } @else if (toStart().length === 0) {
+          <kp-empty-state [compact]="true" icon="calendar" heading="Brak cykli do uruchomienia" />
+        } @else {
+          <ul class="kp-hr__list">
+            @for (employee of toStart(); track employee.id) {
+              <li class="kp-hr__item">
+                <kp-avatar [name]="employee.fullName" [size]="36" />
+                <div class="kp-hr__item-main">
+                  <a class="kp-hr__item-link" [routerLink]="['/pracownicy', employee.id]">{{ employee.fullName }}</a>
+                  <p class="kp-hr__item-meta">
+                    {{ employee.suggestedPath === 'first' ? 'Pierwsza ocena' : 'Ocena okresowa' }} · {{ employee.orgUnitCode }}
+                  </p>
+                </div>
+                <div class="kp-hr__item-side">
+                  @if (employee.nextAction?.dueDate; as due) {
+                    <kp-due-chip [date]="due" prefix="część I do" />
+                  }
+                  <button type="button" kpButton size="sm" icon="play" (click)="openStart(employee.id)">Uruchom</button>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+
+    <section class="kp-card kp-card--flush" aria-labelledby="kp-all-title">
+      <div class="kp-hr__table-header">
+        <h2 class="kp-card__title" id="kp-all-title">Wszystkie oceny <span class="kp-tabs__count">{{ filtered().length }}</span></h2>
+        <div class="kp-hr__filters" role="search" aria-label="Filtruj oceny">
+          <label class="kp-input-group kp-hr__search">
+            <kp-icon name="search" [size]="16" />
+            <input
+              class="kp-input kp-input--sm"
+              type="search"
+              placeholder="Szukaj osoby, stanowiska, oceniającego"
+              aria-label="Szukaj"
+              [value]="query()"
+              (input)="query.set($any($event.target).value)"
+            />
+          </label>
+          <select class="kp-select kp-input--sm" aria-label="Rodzaj oceny" [value]="pathFilter()" (change)="setPath($any($event.target).value)">
+            <option value="all">Wszystkie rodzaje</option>
+            <option value="periodic">Ocena okresowa</option>
+            <option value="first">Pierwsza ocena</option>
+          </select>
+          <select class="kp-select kp-input--sm" aria-label="Status" [value]="statusFilter()" (change)="setStatus($any($event.target).value)">
+            <option value="all">Każdy status</option>
+            <option value="uwaga">Wymaga uwagi</option>
+            <option value="w-toku">W toku</option>
+            <option value="zakonczona">Zakończone</option>
+          </select>
+          <select class="kp-select kp-input--sm" aria-label="Komórka" [value]="unitFilter()" (change)="unitFilter.set($any($event.target).value)">
+            <option value="all">Wszystkie komórki</option>
+            @for (unit of units(); track unit) {
+              <option [value]="unit">{{ unit }}</option>
+            }
+          </select>
+          @if (hasFilters()) {
+            <button type="button" kpButton="ghost" size="sm" icon="x" (click)="clearFilters()">Wyczyść</button>
+          }
+        </div>
+      </div>
+
+      @if (filtered().length === 0) {
+        <kp-empty-state [compact]="true" icon="search" heading="Brak ocen dla wybranych filtrów">
+          <button type="button" kpButton="secondary" size="sm" (click)="clearFilters()">Pokaż wszystkie</button>
+        </kp-empty-state>
+      } @else {
+        <div class="kp-hr__table-wrap">
+          <table class="kp-table">
+            <caption class="kp-visually-hidden">Lista ocen w urzędzie</caption>
+            <thead>
+              <tr>
+                <th scope="col">Pracownik</th>
+                <th scope="col">Rodzaj</th>
+                <th scope="col">Postęp</th>
+                <th scope="col">Następna czynność</th>
+                <th scope="col">Oceniający</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="kp-visually-hidden">Akcje</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (summary of filtered(); track summary.id) {
+                <tr>
+                  <td>
+                    <span class="kp-hr__cell-name">{{ summary.employee.fullName }}</span>
+                    <span class="kp-hr__cell-meta">{{ summary.employee.positionTitle }} · {{ summary.employee.orgUnitCode }}</span>
+                  </td>
+                  <td class="kp-hr__cell-nowrap">{{ kindLabel(summary) }}</td>
+                  <td class="kp-hr__cell-progress">
+                    <kp-progress
+                      [value]="progressOf(summary)"
+                      [label]="'Postęp: ' + summary.employee.fullName"
+                      [valueText]="summary.status === 'zakonczona' ? 'zakończona' : summary.stepIndex + '/' + summary.stepCount + ' · ' + summary.currentStepLabel"
+                    />
+                  </td>
+                  <td>
+                    <span class="kp-hr__cell-text">{{ summary.nextActionLabel }}</span>
+                    @if (summary.status === 'w-toku' && summary.nextActionDue) {
+                      <kp-due-chip [date]="summary.nextActionDue" />
+                    }
+                  </td>
+                  <td class="kp-hr__cell-nowrap">{{ summary.evaluator.fullName }}</td>
+                  <td>
+                    <div class="kp-cluster">
+                      @if (summary.status === 'zakonczona') {
+                        @if (summary.outcome; as outcome) {
+                          <kp-badge [tone]="outcomeTone[outcome]" [dot]="true">{{ outcome }} · {{ summary.mean | kpScore }}</kp-badge>
+                        } @else {
+                          <kp-badge tone="success">zakończona</kp-badge>
+                        }
+                      } @else if (summary.attention.length === 0) {
+                        <kp-badge tone="neutral" [dot]="true">w terminie</kp-badge>
+                      } @else {
+                        @for (reason of summary.attention; track reason) {
+                          <kp-badge [tone]="attentionInfo[reason].tone">{{ attentionInfo[reason].label }}</kp-badge>
+                        }
+                      }
+                    </div>
+                  </td>
+                  <td class="kp-hr__cell-action">
+                    <a kpButton="ghost" size="sm" iconEnd="arrow-right" [routerLink]="['/oceny', summary.id]" [attr.aria-label]="'Otwórz ocenę: ' + summary.employee.fullName">Otwórz</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <kp-callout tone="neutral" icon="lock" heading="Prywatność ocen">
+      Kadry widzą etapy, terminy i wynik. Obserwacje, zaznaczone zachowania, notatki z rozmów i uzasadnienia odstępstw są dostępne tylko dla oceniającego.
+      Narzędzie nie tworzy rankingów pracowników.
+    </kp-callout>
+  </div>
+}

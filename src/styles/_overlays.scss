@@ -1,0 +1,132 @@
+@use 'mixins' as *;
+
+// Warstwy CDK: dialogi, panele boczne i menu kontekstowe.
+
+.kp-backdrop {
+  background: var(--kp-color-backdrop);
+}
+
+// Selektor podwójny — style panelu CDK (`max-height: 100%`) ładują się później i wygrywałyby kolejnością.
+.cdk-overlay-pane.kp-dialog-panel {
+  max-height: calc(100dvh - 48px);
+
+  .cdk-dialog-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: inherit;
+    overflow: hidden;
+    border-radius: var(--kp-radius-lg);
+    background: var(--kp-color-surface);
+    box-shadow: var(--kp-shadow-lg);
+    outline: none;
+    animation: kp-dialog-in var(--kp-duration-slow) var(--kp-ease-standard);
+  }
+}
+
+// Komponent dialogu przekazuje limit wysokości do `kp-dialog-shell`, żeby przewijała się tylko treść.
+.cdk-dialog-container > * {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: inherit;
+}
+
+.kp-drawer-panel {
+  height: 100dvh;
+
+  .cdk-dialog-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: var(--kp-radius-lg) 0 0 var(--kp-radius-lg);
+    background: var(--kp-color-surface);
+    box-shadow: var(--kp-shadow-lg);
+    outline: none;
+    animation: kp-drawer-in var(--kp-duration-slow) var(--kp-ease-standard);
+  }
+}
+
+@keyframes kp-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+}
+
+@keyframes kp-drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+.kp-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  max-width: 360px;
+  padding: var(--kp-space-2);
+  border: 1px solid var(--kp-color-border);
+  border-radius: var(--kp-radius-md);
+  background: var(--kp-color-surface);
+  box-shadow: var(--kp-shadow-md);
+  animation: kp-dialog-in var(--kp-duration-base) var(--kp-ease-standard);
+}
+
+.kp-menu__label {
+  padding: var(--kp-space-2) var(--kp-space-3) var(--kp-space-1);
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-3xs);
+  font-weight: var(--kp-font-weight-medium);
+}
+
+.kp-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--kp-space-2);
+  width: 100%;
+  min-height: 36px;
+  padding: var(--kp-space-1-5) var(--kp-space-3);
+  border: 0;
+  border-radius: var(--kp-radius-sm);
+  background: transparent;
+  color: var(--kp-color-text);
+  font-size: var(--kp-font-size-xs);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible,
+  &.cdk-menu-item-active {
+    outline: none;
+    background: var(--kp-color-surface-tint);
+    color: var(--kp-color-primary);
+  }
+
+  &[aria-checked='true'] {
+    font-weight: var(--kp-font-weight-medium);
+    color: var(--kp-color-primary);
+  }
+
+  &:disabled {
+    color: var(--kp-color-text-muted);
+    cursor: not-allowed;
+    background: transparent;
+  }
+}
+
+.kp-menu__item-meta {
+  display: block;
+  font-size: var(--kp-font-size-3xs);
+  color: var(--kp-color-text-muted);
+}
+
+.kp-menu__separator {
+  height: 1px;
+  margin: var(--kp-space-1) var(--kp-space-2);
+  background: var(--kp-color-border);
+}

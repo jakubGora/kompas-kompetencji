@@ -1,0 +1,137 @@
+<kp-page-header [eyebrow]="todayLabel()" [heading]="greeting()" [description]="cases.hasValue() ? summary() : undefined">
+  <a pageActions kpButton="secondary" icon="users" routerLink="/pracownicy">Mój zespół</a>
+  <a pageActions kpButton="ghost" icon="book" routerLink="/baza-wiedzy">Zapytaj o przepisy</a>
+</kp-page-header>
+
+@if (cases.isLoading() && !cases.hasValue()) {
+  <div class="kp-my" aria-busy="true">
+    <kp-skeleton height="220px" radius="var(--kp-radius-lg)" />
+    <div class="kp-grid kp-grid--2">
+      <kp-skeleton height="200px" radius="var(--kp-radius-lg)" />
+      <kp-skeleton height="200px" radius="var(--kp-radius-lg)" />
+    </div>
+  </div>
+} @else if (cases.error()) {
+  <div class="kp-card">
+    <kp-empty-state icon="alert-circle" heading="Nie udało się wczytać ocen" description="Sprawdź połączenie i spróbuj ponownie.">
+      <button type="button" kpButton icon="reset" (click)="cases.reload()">Spróbuj ponownie</button>
+    </kp-empty-state>
+  </div>
+} @else {
+  <div class="kp-my">
+    @if (focus(); as top) {
+      <section aria-labelledby="kp-focus-title">
+        <h2 class="kp-section-title" id="kp-focus-title">
+          <kp-icon name="target" [size]="18" /> {{ top.attention.length > 0 ? 'Najpilniejsze teraz' : 'Następna w kolejce' }}
+        </h2>
+        <kp-case-card [summary]="top" [featured]="true" />
+      </section>
+    } @else {
+      <div class="kp-card">
+        <kp-empty-state
+          icon="check-circle"
+          heading="Nie masz ocen w toku"
+          description="Gdy kadry uruchomią ocenę Twojego pracownika, pojawi się tutaj razem z terminami."
+        >
+          <a kpButton="secondary" icon="users" routerLink="/pracownicy">Zobacz zespół i terminy</a>
+        </kp-empty-state>
+      </div>
+    }
+
+    @if (others().length > 0) {
+      <section aria-labelledby="kp-active-title">
+        <h2 class="kp-section-title" id="kp-active-title">
+          Pozostałe oceny w toku <span class="kp-tabs__count">{{ others().length }}</span>
+        </h2>
+        <div class="kp-grid kp-grid--2">
+          @for (summary of others(); track summary.id) {
+            <kp-case-card [summary]="summary" />
+          }
+        </div>
+      </section>
+    }
+
+    @if (asHeadOfUnit().length > 0) {
+      <section class="kp-card" aria-labelledby="kp-head-title">
+        <div class="kp-card__header">
+          <div>
+            <h2 class="kp-card__title" id="kp-head-title">Jako kierujący komórką</h2>
+            <p class="kp-card__subtitle">Pierwsze oceny, które potwierdzasz podpisem (§ 11 rozporządzenia z 2015 r.). Masz wgląd bez możliwości edycji.</p>
+          </div>
+        </div>
+        <ul class="kp-my__rows">
+          @for (summary of asHeadOfUnit(); track summary.id) {
+            <li class="kp-my__row">
+              <kp-avatar [name]="summary.employee.fullName" [size]="36" />
+              <div class="kp-my__row-main">
+                <a class="kp-my__row-link" [routerLink]="['/oceny', summary.id]">{{ summary.employee.fullName }}</a>
+                <p class="kp-my__row-meta">{{ kindLabel(summary) }} · oceniający: {{ summary.evaluator.fullName }}</p>
+              </div>
+              <p class="kp-my__row-step">{{ summary.status === 'zakonczona' ? 'Zakończona' : summary.currentStepLabel }}</p>
+              @if (summary.status === 'w-toku' && summary.nextActionDue) {
+                <kp-due-chip [date]="summary.nextActionDue" />
+              }
+              <kp-badge tone="neutral" icon="eye">tylko odczyt</kp-badge>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <section class="kp-card kp-card--flush" aria-labelledby="kp-done-title">
+      <div class="kp-card__header kp-my__done-header">
+        <div>
+          <h2 class="kp-card__title" id="kp-done-title">Zakończone oceny</h2>
+          <p class="kp-card__subtitle">Arkusze podpisane i przekazane do akt osobowych.</p>
+        </div>
+      </div>
+      @if (completed().length === 0) {
+        <kp-empty-state [compact]="true" icon="file-check" heading="Brak zakończonych ocen" />
+      } @else {
+        <div class="kp-my__table-wrap">
+          <table class="kp-table">
+            <caption class="kp-visually-hidden">Zakończone oceny</caption>
+            <thead>
+              <tr>
+                <th scope="col">Pracownik</th>
+                <th scope="col">Rodzaj</th>
+                <th scope="col">Wynik</th>
+                <th scope="col">Średnia</th>
+                <th scope="col">Zapoznanie</th>
+                <th scope="col"><span class="kp-visually-hidden">Akcje</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (summary of completed(); track summary.id) {
+                <tr>
+                  <td>
+                    <span class="kp-my__cell-name">{{ summary.employee.fullName }}</span>
+                    <span class="kp-my__cell-meta">{{ summary.employee.positionTitle }}</span>
+                  </td>
+                  <td>{{ kindLabel(summary) }}</td>
+                  <td>
+                    @if (summary.outcome; as outcome) {
+                      <kp-badge [tone]="outcomeTone[outcome]" [dot]="true">{{ outcome }}</kp-badge>
+                    }
+                    @if (summary.levelLabel) {
+                      <span class="kp-my__cell-meta">{{ summary.levelLabel }}</span>
+                    }
+                  </td>
+                  <td class="kp-tabular">{{ summary.mean | kpScore }}</td>
+                  <td>{{ summary.completedAt | kpDate }}</td>
+                  <td class="kp-my__cell-action">
+                    <a kpButton="ghost" size="sm" iconEnd="arrow-right" [routerLink]="['/oceny', summary.id, 'arkusz']">Arkusz</a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <kp-callout tone="neutral" icon="shield">
+      Kompas podpowiada kroki, terminy i źródła — decyzje w ocenie zawsze podejmujesz Ty. Dane w wersji demonstracyjnej są fikcyjne.
+    </kp-callout>
+  </div>
+}

@@ -1,0 +1,39 @@
+<header class="kp-topbar">
+  <button
+    type="button"
+    class="kp-topbar__icon-button kp-topbar__menu"
+    (click)="toggleNav.emit()"
+    [attr.aria-expanded]="navOpen()"
+    aria-controls="kp-sidebar"
+    aria-label="Menu nawigacji"
+  >
+    <kp-icon [name]="navOpen() ? 'x' : 'menu'" [size]="22" />
+  </button>
+
+  <nav class="kp-topbar__crumbs" aria-label="Okruszki">
+    <ol>
+      <li><a [routerLink]="session.homeUrl()">Obszar roboczy</a></li>
+      @for (crumb of breadcrumbs.crumbs(); track $index; let last = $last) {
+        <li>
+          @if (crumb.link && !last) {
+            <a [routerLink]="crumb.link">{{ crumb.label }}</a>
+          } @else {
+            <span [attr.aria-current]="last ? 'page' : null">{{ crumb.label }}</span>
+          }
+        </li>
+      }
+    </ol>
+  </nav>
+
+  <button
+    type="button"
+    class="kp-topbar__icon-button"
+    (click)="openNotifications()"
+    [attr.aria-label]="notifications.unreadCount() > 0 ? 'Powiadomienia: ' + notifications.unreadCount() + ' nieprzeczytane' : 'Powiadomienia'"
+  >
+    <kp-icon name="kp-bell" [size]="24" />
+    @if (notifications.unreadCount() > 0) {
+      <span class="kp-topbar__badge" aria-hidden="true"></span>
+    }
+  </button>
+</header>

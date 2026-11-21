@@ -1,0 +1,128 @@
+<section class="kp-assistant__panel" [attr.aria-labelledby]="uid + '-title'">
+  <header class="kp-assistant__header">
+    <div class="kp-assistant__heading">
+      <h2 [id]="uid + '-title'" class="kp-assistant__title">Asystent AI</h2>
+      <p class="kp-assistant__context">{{ contextLabel() ?? 'Przepisy, poradniki i model kompetencji' }}</p>
+    </div>
+    @if (messages().length > 0) {
+      <button type="button" class="kp-assistant__icon-button" (click)="clear()" aria-label="Wyczyść rozmowę z asystentem">
+        <kp-icon name="reset" [size]="16" />
+      </button>
+    }
+    @if (closable()) {
+      <button type="button" class="kp-assistant__icon-button" (click)="closed.emit()" aria-label="Zamknij asystenta">
+        <kp-icon name="x" [size]="18" />
+      </button>
+    }
+  </header>
+
+  <div class="kp-segmented kp-assistant__modes" role="radiogroup" aria-label="Tryb asystenta">
+    <label>
+      <input type="radio" [name]="uid + '-mode'" value="formalny" [checked]="mode() === 'formalny'" (change)="setMode('formalny')" />
+      Formalny
+    </label>
+    <label>
+      <input type="radio" [name]="uid + '-mode'" value="rozmowa" [checked]="mode() === 'rozmowa'" (change)="setMode('rozmowa')" />
+      Rozmowa
+    </label>
+  </div>
+
+  <div class="kp-assistant__log" #log aria-live="polite" aria-relevant="additions">
+    @if (messages().length === 0) {
+      <div class="kp-assistant__intro">
+        <p class="kp-assistant__bubble kp-assistant__bubble--answer">
+          @if (mode() === 'formalny') {
+            Zapytaj o procedurę, terminy lub kryteria. Każda odpowiedź ma cytat ze źródła, a gdy źródła milczą — powiem to wprost.
+          } @else {
+            Przygotuj się do rozmowy: jak ją otworzyć, jak przekazać informację zwrotną i jak reagować na niezgodę.
+          }
+        </p>
+        @if (suggestions().length > 0) {
+          <ul class="kp-assistant__suggestions" role="list" aria-label="Przykładowe pytania">
+            @for (suggestion of suggestions(); track suggestion.text) {
+              <li>
+                <button type="button" class="kp-assistant__suggestion" (click)="ask(suggestion.text)">{{ suggestion.text }}</button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    @for (message of messages(); track message.id) {
+      <article class="kp-assistant__exchange">
+        <p class="kp-assistant__bubble kp-assistant__bubble--question">
+          <span class="kp-visually-hidden">Twoje pytanie: </span>{{ message.question }}
+        </p>
+        @if (message.answer; as answer) {
+          <div class="kp-assistant__bubble kp-assistant__bubble--answer">
+            @if (answer.status !== 'odpowiedz' || answer.toolRule) {
+              <p class="kp-assistant__status" [class.kp-assistant__status--warning]="answer.status === 'brak-zrodla'">
+                {{ answer.toolRule ? 'Reguła narzędzia, nie przepis' : status[answer.status] }}
+              </p>
+            }
+            <p>{{ answer.answer }}</p>
+            @if (answer.bullets.length > 0) {
+              <ul class="kp-assistant__bullets">
+                @for (bullet of answer.bullets; track $index) {
+                  <li>{{ bullet }}</li>
+                }
+              </ul>
+            }
+            @for (citation of answer.citations; track citation.fragmentId) {
+              <button type="button" class="kp-assistant__citation" (click)="openCitation(citation)" [attr.aria-label]="'Źródło: ' + citation.label + '. Pokaż cytat'">
+                {{ citation.label }}
+              </button>
+            }
+          </div>
+          @if (answer.followUps.length > 0) {
+            <div class="kp-assistant__followups">
+              @for (followUp of answer.followUps; track followUp) {
+                <button type="button" class="kp-assistant__suggestion" (click)="ask(followUp)">{{ followUp }}</button>
+              }
+            </div>
+          }
+        } @else if (message.error) {
+          <p class="kp-assistant__bubble kp-assistant__bubble--answer kp-assistant__error">{{ message.error }}</p>
+        } @else {
+          <p class="kp-assistant__bubble kp-assistant__bubble--answer kp-assistant__thinking" role="status">
+            <span class="kp-assistant__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            Szukam w źródłach…
+          </p>
+        }
+      </article>
+    }
+  </div>
+
+  <form class="kp-assistant__composer" (submit)="$event.preventDefault(); ask(draft())">
+    <label class="kp-visually-hidden" [for]="uid + '-input'">Pytanie do asystenta</label>
+    <textarea
+      [id]="uid + '-input'"
+      class="kp-assistant__input"
+      rows="1"
+      [attr.maxlength]="maxLength"
+      [value]="draft()"
+      (input)="onInput($event)"
+      (keydown)="onKeydown($event)"
+      [placeholder]="dictation.listening() ? 'Słucham…' : 'Zadaj pytanie…'"
+    ></textarea>
+    @if (dictation.support() !== 'checking') {
+      <button
+        type="button"
+        class="kp-assistant__mic"
+        [class.kp-assistant__mic--active]="dictation.listening()"
+        [attr.aria-disabled]="dictation.support() === 'unavailable' ? 'true' : null"
+        [attr.aria-pressed]="dictation.listening()"
+        [attr.aria-label]="dictation.listening() ? 'Zatrzymaj dyktowanie' : 'Dyktuj pytanie'"
+        [title]="dictation.support() === 'unavailable' ? 'Dyktowanie działa tylko z rozpoznawaniem mowy na urządzeniu' : 'Dyktuj pytanie'"
+        (click)="toggleDictation()"
+      >
+        <kp-icon name="kp-mic" [size]="18" />
+      </button>
+    }
+    <button type="submit" class="kp-assistant__send" [disabled]="!draft().trim() || pending()" aria-label="Wyślij pytanie">
+      <kp-icon name="kp-send" [size]="15" />
+    </button>
+  </form>
+  <p class="kp-assistant__disclaimer">Odpowiedź AI • zweryfikuj przed użyciem</p>
+</section>

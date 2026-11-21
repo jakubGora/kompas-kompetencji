@@ -1,0 +1,67 @@
+@if (store.loading()) {
+  <kp-page-skeleton label="Wczytywanie oceny…" />
+} @else if (store.error(); as error) {
+  <div class="kp-card">
+    @switch (error.status) {
+      @case (403) {
+        <kp-empty-state icon="lock" heading="Nie masz dostępu do tej oceny" [description]="error.message">
+          <a kpButton icon="arrow-left" [routerLink]="session.homeUrl()">Wróć do listy</a>
+        </kp-empty-state>
+      }
+      @case (404) {
+        <kp-empty-state icon="compass" heading="Nie znaleziono oceny" description="Sprawdź link albo wróć do listy ocen.">
+          <a kpButton icon="arrow-left" [routerLink]="session.homeUrl()">Wróć do listy</a>
+        </kp-empty-state>
+      }
+      @default {
+        <kp-empty-state icon="alert-circle" heading="Nie udało się wczytać oceny" [description]="error.message">
+          <button type="button" kpButton icon="reset" (click)="retry()">Spróbuj ponownie</button>
+        </kp-empty-state>
+      }
+    }
+  </div>
+} @else if (store.case(); as c) {
+  <kp-page-header class="kp-case__header" [heading]="heading()" [description]="intro()" descriptionTone="default">
+    <div pageActions class="kp-case__aside">
+      @if (c.access.redacted) {
+        <div class="kp-status-note kp-status-note--warning">
+          <p class="kp-status-note__title"><kp-icon name="eye" [size]="14" /> Widok kadr • dane ograniczone</p>
+          <p class="kp-status-note__text">Treść obserwacji i notatek z rozmów zna tylko oceniający.</p>
+        </div>
+      } @else if (c.access.role === 'kierujacy') {
+        <div class="kp-status-note">
+          <p class="kp-status-note__title"><kp-icon name="eye" [size]="14" /> Podgląd kierującego komórką</p>
+          <p class="kp-status-note__text">Zmiany wprowadza oceniający: {{ c.evaluator.fullName }}.</p>
+        </div>
+      } @else if (c.status === 'zakonczona') {
+        <div class="kp-status-note kp-status-note--success">
+          <p class="kp-status-note__title">✓ Ocena zakończona • zapoznanie {{ c.conclusion.employeeAcknowledgedAt | kpDate }}</p>
+          <p class="kp-status-note__text">Dane są tylko do odczytu. Dokumenty znajdziesz w historii oceny.</p>
+        </div>
+      }
+      @if (headerSlot.template(); as aside) {
+        <ng-container [ngTemplateOutlet]="aside" />
+      }
+      <div class="kp-case__links kp-no-print">
+        <a class="kp-text-link kp-text-link--sm kp-text-link--muted" [routerLink]="[store.baseUrl(), 'historia']">Historia i dokumenty</a>
+        <a class="kp-text-link kp-text-link--sm kp-text-link--muted" [routerLink]="[store.baseUrl(), 'arkusz']">Podgląd arkusza</a>
+        @if (!assistantDocked()) {
+          <button type="button" class="kp-text-link kp-text-link--sm" (click)="openAssistant()">Asystent AI</button>
+        }
+      </div>
+    </div>
+  </kp-page-header>
+
+  <kp-stepper class="kp-case__stepper kp-no-print" [items]="store.stepperItems()" />
+
+  <div class="kp-case__body" [class.kp-case__body--docked]="assistantDocked()">
+    <div class="kp-case__main">
+      <router-outlet />
+    </div>
+    @if (assistantDocked()) {
+      <aside class="kp-case__assistant kp-no-print" aria-label="Asystent AI">
+        <kp-assistant-panel [context]="assistantContext()" [contextLabel]="assistantLabel()" />
+      </aside>
+    }
+  </div>
+}

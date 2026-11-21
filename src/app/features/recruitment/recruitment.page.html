@@ -1,0 +1,93 @@
+<kp-page-header
+  eyebrow="Nabory"
+  heading="Rekrutacje"
+  description="Dowody kompetencji kandydatów zebrane z CV, zadań i rozmów. Komisja ocenia opisowo — narzędzie nie tworzy rankingu."
+/>
+
+@if (recruitments.isLoading() && !recruitments.hasValue()) {
+  <kp-skeleton height="420px" radius="var(--kp-radius-lg)" />
+} @else if (recruitments.error()) {
+  <div class="kp-card">
+    <kp-empty-state icon="alert-circle" heading="Nie udało się wczytać naborów">
+      <button type="button" kpButton icon="reset" (click)="recruitments.reload()">Spróbuj ponownie</button>
+    </kp-empty-state>
+  </div>
+} @else if (list().length === 0) {
+  <div class="kp-card"><kp-empty-state icon="briefcase" heading="Brak naborów" /></div>
+} @else {
+  <div class="kp-recruitment">
+    @if (list().length > 1) {
+      <div class="kp-segmented" role="radiogroup" aria-label="Nabór">
+        @for (item of list(); track item.id) {
+          <label>
+            <input type="radio" name="kp-recruitment" [checked]="selectedId() === item.id" (change)="select(item.id)" />
+            {{ item.reference }}
+          </label>
+        }
+      </div>
+    }
+
+    @if (recruitment(); as r) {
+      <section class="kp-card kp-recruitment__summary" aria-labelledby="kp-recruitment-title">
+        <div class="kp-recruitment__summary-main">
+          <p class="kp-eyebrow">{{ r.reference }} · {{ r.orgUnitName }}</p>
+          <h2 class="kp-recruitment__title" id="kp-recruitment-title">{{ r.title }}</h2>
+          <p class="kp-muted kp-text-sm">
+            Opublikowano {{ r.publishedAt | kpDate }} ·
+            {{ r.candidateCount | kpPlural: ['kandydat', 'kandydatów', 'kandydatów'] }}
+          </p>
+          <div class="kp-cluster">
+            @for (id of r.competencyIds; track id) {
+              <span class="kp-chip">{{ competencyName(id) }}</span>
+            }
+          </div>
+        </div>
+        <div class="kp-recruitment__summary-side">
+          @if (r.status === 'otwarta') {
+            <kp-due-chip [date]="r.closesAt" prefix="zgłoszenia do" />
+          } @else {
+            <kp-badge tone="neutral">zakończony</kp-badge>
+          }
+        </div>
+      </section>
+    }
+
+    <kp-callout tone="info" icon="scale" heading="Bez rankingu">
+      Karty w kolumnach są ułożone według daty zgłoszenia. Kompas porządkuje dowody i podpowiada pytania pogłębiające — nie sumuje ocen i nie porównuje kandydatów.
+    </kp-callout>
+
+    @if (detail.isLoading() && !detail.hasValue()) {
+      <kp-skeleton height="320px" radius="var(--kp-radius-lg)" />
+    } @else {
+      <div class="kp-board" role="list" aria-label="Etapy naboru">
+        @for (column of columns(); track column.id) {
+          <section class="kp-board__column" role="listitem" [attr.aria-labelledby]="'kp-stage-' + column.id">
+            <h3 class="kp-board__title" [id]="'kp-stage-' + column.id">
+              {{ column.label }} <span class="kp-tabs__count">{{ column.candidates.length }}</span>
+            </h3>
+            @for (candidate of column.candidates; track candidate.id) {
+              <article class="kp-board__card">
+                <div class="kp-board__card-head">
+                  <kp-avatar [name]="candidate.fullName" [size]="32" />
+                  <a class="kp-board__card-link" [routerLink]="['/rekrutacje/kandydaci', candidate.id]">{{ candidate.fullName }}</a>
+                </div>
+                <p class="kp-board__note">{{ candidate.statusNote }}</p>
+                <kp-badge [tone]="formalInfo[formalOf(candidate)].tone" [dot]="true">{{ formalInfo[formalOf(candidate)].label }}</kp-badge>
+                <p class="kp-board__meta">
+                  <kp-icon name="list-checks" [size]="14" />
+                  dowody ocenione: {{ ratedOf(candidate) }}/{{ recruitment()?.competencyIds?.length ?? 0 }}
+                </p>
+                @if (candidate.nextEvent; as event) {
+                  <p class="kp-board__meta"><kp-icon name="calendar" [size]="14" /> {{ event.label }}, {{ event.at | kpDate: 'datetime' }}</p>
+                }
+                <p class="kp-board__meta kp-board__applied">zgłoszenie {{ candidate.appliedAt | kpDate }}</p>
+              </article>
+            } @empty {
+              <p class="kp-board__empty">Brak kandydatów na tym etapie</p>
+            }
+          </section>
+        }
+      </div>
+    }
+  </div>
+}

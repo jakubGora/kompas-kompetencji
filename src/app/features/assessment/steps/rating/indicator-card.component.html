@@ -1,0 +1,62 @@
+<tr
+  class="kp-ind-row"
+  [class.kp-ind-row--answered]="answered()"
+  [class.kp-ind-row--nobasis]="assessment().noBasis"
+>
+  <th scope="row" class="kp-ind-row__label">
+    <span class="kp-ind-row__no" aria-hidden="true">{{ number() < 10 ? '0' + number() : number() }}</span>
+    <span class="kp-ind-row__text">{{ indicator().text }}</span>
+    @if (evidence().length > 0) {
+      <span class="kp-ind-row__proof">
+        Dowód · {{ evidence()[0].date | kpDate }}
+        @if (evidence().length > 1) {
+          +{{ evidence().length - 1 }}
+        }
+      </span>
+    }
+    @if (editable() && answered()) {
+      <button type="button" class="kp-link-button kp-ind-row__clear" (click)="clear()">Wyczyść</button>
+    }
+  </th>
+
+  @for (behavior of indicator().behaviors; track behavior.level_index) {
+    <td class="kp-ind-row__cell">
+      <label
+        class="kp-cell"
+        [class.kp-cell--on]="!assessment().noBasis && assessment().level === behavior.level_index"
+        [class.kp-cell--ai]="isAiSuggested(behavior.level_index)"
+        [class.kp-cell--expected]="behavior.level_index === 3"
+      >
+        <input
+          type="radio"
+          class="kp-visually-hidden"
+          [name]="name()"
+          [value]="behavior.level_index"
+          [checked]="!assessment().noBasis && assessment().level === behavior.level_index"
+          [disabled]="!editable()"
+          (change)="selectLevel(behavior.level_index)"
+        />
+        <span class="kp-cell__body">{{ behavior.description }}</span>
+        @if (isAiSuggested(behavior.level_index)) {
+          <span class="kp-cell__ai"><kp-icon name="sparkles" [size]="12" /> Sugerowane przez AI</span>
+        }
+      </label>
+    </td>
+  }
+
+  <td class="kp-ind-row__nobasis">
+    <label class="kp-nobasis" [class.kp-nobasis--on]="assessment().noBasis">
+      <input
+        type="radio"
+        class="kp-visually-hidden"
+        [name]="name()"
+        value="brak"
+        [checked]="assessment().noBasis"
+        [disabled]="!editable()"
+        (change)="selectNoBasis()"
+      />
+      <span class="kp-nobasis__mark" aria-hidden="true"></span>
+      <span class="kp-nobasis__text">Nie miałem okazji zaobserwować</span>
+    </label>
+  </td>
+</tr>

@@ -1,0 +1,66 @@
+<section class="kp-final" aria-labelledby="kp-final-title">
+  <div class="kp-final__head">
+    <div>
+      <h3 class="kp-final__title" id="kp-final-title">Twoja ostateczna ocena – wybierz poziom</h3>
+      @if (!suggestion().insufficientEvidence) {
+        <p class="kp-final__hint">
+          AI sugeruje <strong>{{ suggestedLabel() || '—' }}</strong>
+          @if (suggestion().average !== null) {
+            na podstawie średniej {{ suggestion().average | kpScore }} z {{ suggestion().assessedCount }} wskaźników.
+          }
+        </p>
+      } @else {
+        <p class="kp-final__hint">Zaznacz zachowania albo „nie miałem okazji” — wtedy pojawi się sugestia AI.</p>
+      }
+    </div>
+    @if (editable() && suggestion().points !== null && decision()?.points !== suggestion().points) {
+      <button type="button" class="kp-link-button" (click)="acceptSuggestion()">Przyjmij sugestię AI</button>
+    }
+  </div>
+
+  <fieldset class="kp-final__scale" [disabled]="!editable()">
+    <legend class="kp-visually-hidden">Ocena cząstkowa w punktach</legend>
+    @for (option of scale(); track option.points) {
+      <label
+        class="kp-final__option"
+        [class.kp-final__option--on]="decision()?.points === option.points"
+        [class.kp-final__option--ai]="option.points === suggestion().points"
+      >
+        <input
+          type="radio"
+          [name]="name()"
+          [value]="option.points"
+          [checked]="decision()?.points === option.points"
+          (change)="choose(option.points)"
+        />
+        <span class="kp-final__points">{{ option.points }}</span>
+        <span class="kp-final__label">{{ shortLabel(option.points) }}</span>
+        @if (option.points === suggestion().points) {
+          <span class="kp-final__tag"><kp-icon name="sparkles" [size]="12" /> AI</span>
+        }
+      </label>
+    }
+  </fieldset>
+
+  @if (decision(); as d) {
+    <kp-field
+      class="kp-final__rationale"
+      [label]="deviates() ? 'Uzasadnienie odstępstwa od sugestii' : 'Komentarz do oceny'"
+      [required]="deviates()"
+      [optionalHint]="!deviates()"
+      [error]="rationaleError()"
+      [hint]="'Trafi do śladu decyzji, nie do arkusza.'"
+    >
+      <textarea kpControl class="kp-textarea" rows="2" [value]="d.rationale" [disabled]="!editable()" (input)="setRationale($event)"></textarea>
+    </kp-field>
+    @if (path() === 'periodic' && d.points === 1) {
+      <kp-callout tone="danger" heading="Ocena 1 pkt przesądza o wyniku">
+        Co najmniej jedna ocena cząstkowa 1 pkt oznacza ocenę negatywną, niezależnie od średniej (§ 11 ust. 1 pkt 4).
+      </kp-callout>
+    } @else if (path() === 'first' && d.points === 3) {
+      <kp-callout tone="warning" heading="Pamiętaj o warunku z § 10 ust. 1 pkt 3">
+        Więcej niż jedna ocena 3 pkt oznacza negatywną pierwszą ocenę.
+      </kp-callout>
+    }
+  }
+</section>

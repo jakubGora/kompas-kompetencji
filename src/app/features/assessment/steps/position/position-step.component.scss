@@ -1,0 +1,182 @@
+// Projekt 03 „Stanowisko i OSP”: karta przypisanego dokumentu i karta osoby z arkuszem oraz zadaniami.
+.kp-osp-document {
+  display: grid;
+  justify-items: start;
+  padding: var(--kp-space-3) var(--kp-space-6) 17px;
+
+  .kp-tag {
+    margin-bottom: var(--kp-space-3);
+  }
+}
+
+.kp-osp-document__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--kp-space-1) var(--kp-space-3);
+}
+
+.kp-osp-document__name {
+  margin: 0;
+  font-size: var(--kp-font-size-lg);
+  font-weight: var(--kp-font-weight-medium);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.kp-osp-document__meta {
+  margin: var(--kp-space-1) 0 0;
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-2xs);
+}
+
+.kp-osp {
+  padding: 26px var(--kp-space-6) var(--kp-space-6);
+}
+
+.kp-osp__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--kp-space-4) var(--kp-space-6);
+}
+
+.kp-osp__name {
+  margin: 0;
+  font-size: var(--kp-font-size-2xl);
+  font-weight: var(--kp-font-weight-medium);
+  line-height: 1.5;
+}
+
+.kp-osp__meta {
+  margin: var(--kp-space-1) 0 0;
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-2xs);
+}
+
+.kp-osp__unit {
+  max-width: 340px;
+}
+
+.kp-osp__sheet {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  min-width: 151px;
+  min-height: 63px;
+  padding: var(--kp-space-2) var(--kp-space-5);
+  border-radius: var(--kp-radius-sm);
+  background: var(--kp-color-surface-tint-strong);
+  text-align: center;
+}
+
+.kp-osp__sheet-name {
+  margin: 0;
+  font-size: var(--kp-font-size-2xl);
+  font-weight: var(--kp-font-weight-semibold);
+  line-height: 1.35;
+}
+
+.kp-osp__sheet-pending {
+  margin: 0;
+  color: var(--kp-color-primary);
+  font-size: var(--kp-font-size-2xs);
+  font-weight: var(--kp-font-weight-medium);
+}
+
+.kp-osp__deviation {
+  margin-top: var(--kp-space-5);
+}
+
+.kp-osp__label {
+  margin-top: var(--kp-space-7);
+}
+
+.kp-osp__purpose {
+  margin: var(--kp-space-1) 0 0;
+  font-size: var(--kp-font-size-sm);
+}
+
+.kp-osp__tasks {
+  min-height: 239px;
+  margin-top: var(--kp-space-7);
+  padding: var(--kp-space-5);
+  border-radius: var(--kp-radius-md);
+  background: var(--kp-color-surface-lilac);
+}
+
+.kp-osp__tasks-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--kp-space-1) var(--kp-space-4);
+  margin-bottom: var(--kp-space-4);
+}
+
+.kp-osp__tasks-title {
+  margin: 0;
+  font-size: var(--kp-font-size-lg);
+  font-weight: var(--kp-font-weight-medium);
+}
+
+.kp-osp__tasks-count {
+  margin: 0;
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-3xs);
+}
+
+.kp-osp__task-list {
+  display: grid;
+  gap: var(--kp-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--kp-font-size-xs);
+  line-height: 1.5;
+
+  li {
+    display: flex;
+    gap: var(--kp-space-3);
+  }
+}
+
+.kp-osp__task-no {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--kp-color-surface-tint-strong);
+  font-size: var(--kp-font-size-3xs);
+  font-weight: var(--kp-font-weight-semibold);
+}
+
+.kp-osp__more {
+  margin-top: var(--kp-space-4);
+
+  summary {
+    width: fit-content;
+    color: var(--kp-color-primary);
+    font-size: var(--kp-font-size-xs);
+    font-weight: var(--kp-font-weight-medium);
+    cursor: pointer;
+  }
+
+  > :not(summary) {
+    margin-top: var(--kp-space-3);
+  }
+}
+
+.kp-osp__facts {
+  grid-template-columns: minmax(140px, max-content) minmax(0, 1fr);
+}
+
+.kp-osp__bullets {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-left: var(--kp-space-4);
+}

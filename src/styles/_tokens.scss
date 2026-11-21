@@ -1,0 +1,170 @@
+// Design tokens — Kompas Kompetencji.
+// Wartości pochodzą z projektu Figma „Kompas” (ekrany 01–06); kontrasty tekstu dostrojone do WCAG 2.2 AA.
+// Komponenty korzystają wyłącznie z tokenów semantycznych (--kp-color-*), nie z palety bazowej.
+
+:root {
+  color-scheme: light;
+
+  // Paleta bazowa
+  --kp-violet-50: #f9f8fc;
+  --kp-violet-75: #f8f4fd;
+  --kp-violet-100: #f4eefc;
+  --kp-violet-150: #eadbff;
+  --kp-violet-200: #dccbf6;
+  --kp-violet-300: #cca8ff;
+  --kp-violet-500: #7f39de;
+  --kp-violet-600: #6b2bc6;
+  --kp-violet-700: #5821a6;
+  --kp-violet-900: #2e1060;
+
+  --kp-neutral-0: #ffffff;
+  --kp-neutral-50: #f7f6fa;
+  --kp-neutral-100: #efeef3;
+  --kp-neutral-200: #e6e5ec;
+  --kp-neutral-250: #d9d9d9;
+  --kp-neutral-300: #dcdee4;
+  --kp-neutral-400: #c3c1cc;
+  --kp-neutral-500: #8f8f8f;
+  --kp-neutral-550: #696969;
+  --kp-neutral-600: #6e6e6e;
+  --kp-neutral-700: #464550;
+  --kp-neutral-900: #111111;
+
+  // Kolory semantyczne
+  --kp-color-bg: var(--kp-violet-50);
+  --kp-color-surface: var(--kp-neutral-0);
+  --kp-color-surface-muted: var(--kp-neutral-50);
+  --kp-color-surface-tint: var(--kp-violet-100);
+  --kp-color-surface-tint-strong: var(--kp-violet-150);
+  --kp-color-surface-lilac: var(--kp-violet-75);
+  --kp-color-surface-hover: var(--kp-violet-50);
+  --kp-color-surface-selected: var(--kp-violet-100);
+
+  --kp-color-border: var(--kp-neutral-300);
+  --kp-color-border-subtle: #ebe9f1;
+  --kp-color-border-control: var(--kp-neutral-250);
+  --kp-color-border-strong: var(--kp-neutral-500);
+
+  --kp-color-text: var(--kp-neutral-900);
+  // #777 z projektu przyciemnione o 1 ton — kontrast ≥ 4,5:1 także na tle #f4eefc.
+  --kp-color-text-muted: var(--kp-neutral-600);
+  --kp-color-text-secondary: var(--kp-neutral-550);
+  --kp-color-text-subtle: var(--kp-neutral-600);
+  --kp-color-text-on-primary: var(--kp-neutral-0);
+  --kp-color-icon: #777777;
+
+  --kp-color-primary: var(--kp-violet-500);
+  --kp-color-primary-hover: var(--kp-violet-600);
+  --kp-color-primary-active: var(--kp-violet-700);
+  --kp-color-primary-strong: var(--kp-violet-500);
+  --kp-color-primary-tint: var(--kp-violet-100);
+  --kp-color-primary-tint-strong: var(--kp-violet-150);
+  --kp-color-primary-border: var(--kp-violet-300);
+
+  --kp-color-disabled-bg: #d4d1db;
+  --kp-color-disabled-text: #57555f;
+
+  --kp-color-success: #167a52;
+  --kp-color-success-bg: #eaf8f1;
+  --kp-color-success-border: #bfe6d3;
+  --kp-color-warning: #8a5a00;
+  --kp-color-warning-bg: #fff5dd;
+  --kp-color-warning-border: #f1d491;
+  --kp-color-danger: #c52a3a;
+  --kp-color-danger-bg: #fdedef;
+  --kp-color-danger-border: #f3c4ca;
+  --kp-color-info: var(--kp-violet-500);
+  --kp-color-info-bg: var(--kp-violet-100);
+  --kp-color-info-border: var(--kp-violet-150);
+
+  --kp-color-backdrop: rgb(17 17 17 / 30%);
+
+  // Fokus
+  --kp-focus-outline-color: var(--kp-color-primary);
+  --kp-focus-ring: 0 0 0 3px rgb(127 57 222 / 24%);
+
+  // Typografia — skala z projektu (px w komentarzach)
+  --kp-font-family:
+    'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --kp-font-family-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --kp-font-weight-regular: 400;
+  --kp-font-weight-medium: 500;
+  --kp-font-weight-semibold: 600;
+
+  --kp-font-size-4xs: 0.5625rem; // 9
+  --kp-font-size-3xs: 0.625rem; // 10
+  --kp-font-size-2xs: 0.6875rem; // 11
+  --kp-font-size-xs: 0.75rem; // 12
+  --kp-font-size-sm: 0.8125rem; // 13 — tekst podstawowy
+  --kp-font-size-md: 0.875rem; // 14
+  --kp-font-size-lg: 0.9375rem; // 15
+  --kp-font-size-xl: 1.0625rem; // 17
+  --kp-font-size-2xl: 1.1875rem; // 19 — tytuł karty
+  --kp-font-size-3xl: 1.25rem; // 20 — tytuł sekcji
+  --kp-font-size-4xl: 1.875rem; // 30 — tytuł strony
+  --kp-font-size-5xl: 2.125rem; // 34 — wartość KPI
+
+  --kp-line-height-tight: 1.25;
+  --kp-line-height-snug: 1.4;
+  --kp-line-height-base: 1.5;
+  --kp-letter-spacing-tight: -0.02em;
+  --kp-letter-spacing-wide: 0.06em;
+
+  // Odstępy (siatka 4 px)
+  --kp-space-0-5: 2px;
+  --kp-space-1: 4px;
+  --kp-space-1-5: 6px;
+  --kp-space-2: 8px;
+  --kp-space-3: 12px;
+  --kp-space-4: 16px;
+  --kp-space-5: 20px;
+  --kp-space-6: 24px;
+  --kp-space-7: 28px;
+  --kp-space-8: 32px;
+  --kp-space-10: 40px;
+  --kp-space-12: 48px;
+  --kp-space-16: 64px;
+
+  // Promienie
+  --kp-radius-xs: 4px;
+  --kp-radius-sm: 8px;
+  --kp-radius-md: 12px;
+  --kp-radius-lg: 16px;
+  --kp-radius-xl: 20px;
+  --kp-radius-pill: 999px;
+
+  // Cienie — tylko dla warstw (menu, dialogi, komunikaty)
+  --kp-shadow-xs: 0 1px 2px rgb(46 16 96 / 5%);
+  --kp-shadow-sm: 0 1px 3px rgb(46 16 96 / 7%), 0 1px 2px rgb(46 16 96 / 4%);
+  --kp-shadow-md: 0 8px 24px rgb(46 16 96 / 9%), 0 2px 6px rgb(46 16 96 / 5%);
+  --kp-shadow-lg: 0 20px 56px rgb(46 16 96 / 16%), 0 4px 12px rgb(46 16 96 / 6%);
+
+  // Ruch
+  --kp-duration-fast: 120ms;
+  --kp-duration-base: 180ms;
+  --kp-duration-slow: 280ms;
+  --kp-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --kp-ease-emphasized: cubic-bezier(0.3, 0, 0, 1.15);
+
+  // Układ
+  --kp-sidebar-width: 216px;
+  --kp-assistant-width: 312px;
+  --kp-content-max-width: 1320px;
+  --kp-page-padding-inline: var(--kp-space-8);
+  --kp-control-height: 52px;
+  --kp-control-height-sm: 36px;
+  --kp-button-height: 48px;
+
+  // Warstwy
+  --kp-z-sticky: 20;
+  --kp-z-header: 30;
+  --kp-z-overlay: 1000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --kp-duration-fast: 0ms;
+    --kp-duration-base: 0ms;
+    --kp-duration-slow: 0ms;
+  }
+}

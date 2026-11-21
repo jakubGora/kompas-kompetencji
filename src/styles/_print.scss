@@ -1,0 +1,37 @@
+// Wydruk i „Zapisz jako PDF”: drukujemy wyłącznie obszar dokumentu (.kp-print-root).
+
+@page {
+  size: A4;
+  margin: 16mm 14mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .kp-print-root,
+  .kp-print-root * {
+    visibility: visible;
+  }
+
+  .kp-print-root {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    box-shadow: none !important;
+  }
+
+  .kp-no-print {
+    display: none !important;
+  }
+
+  .kp-print-page-break {
+    break-before: page;
+  }
+}
