@@ -33,27 +33,6 @@ export const SEED_NOTIFICATIONS: readonly AppNotification[] = [
     caseId: 'case-zofia',
     link: '/oceny/case-zofia/rozmowa-oceniajaca',
   },
-  {
-    id: 'n-4',
-    recipientId: 'u-ewa-mazur',
-    kind: 'przypomnienie',
-    title: 'Jan Kowalski — rozmowa wstępna do 27.11.2026',
-    body: 'Do terminu z § 7 zostało 6 dni. Zaplanuj rozmowę i podpis części I.',
-    createdAt: '2026-11-20T08:00:00.000Z',
-    caseId: 'case-jan',
-    link: '/oceny/case-jan/rozmowa-wstepna',
-    sender: { id: 'u-marta', fullName: 'Marta Wiśniewska', jobTitle: 'Główny specjalista ds. kadr' },
-  },
-  {
-    id: 'n-5',
-    recipientId: 'u-marta',
-    kind: 'zapoznanie',
-    title: 'Katarzyna Wójcik — arkusz czeka na zapoznanie',
-    body: 'Arkusz wygenerowano 19.11.2026. Oceniający powinien niezwłocznie zapoznać ocenianą z oceną (§ 12).',
-    createdAt: '2026-11-19T14:15:00.000Z',
-    caseId: 'case-katarzyna',
-    link: '/oceny/case-katarzyna/podsumowanie',
-  },
 ];
 
 export const SEED_REMINDER_RULES: readonly ReminderRule[] = [
@@ -110,15 +89,5 @@ export const SEED_REMINDER_LOG: readonly ReminderLogEntry[] = [
     title: 'Termin oceny 21.11.2026 (za 32 dni)',
     channel: 'aplikacja',
     readAt: '2026-10-20T09:12:00.000Z',
-  },
-  {
-    id: 'rl-2',
-    sentAt: '2026-11-20T08:00:00.000Z',
-    sender: { id: 'u-marta', fullName: 'Marta Wiśniewska', jobTitle: 'Główny specjalista ds. kadr' },
-    recipient: { id: 'u-ewa-mazur', fullName: 'Ewa Mazur', jobTitle: 'Naczelnik wydziału' },
-    caseId: 'case-jan',
-    employeeName: 'Jan Kowalski',
-    title: 'Rozmowa wstępna do 27.11.2026',
-    channel: 'aplikacja',
   },
 ];

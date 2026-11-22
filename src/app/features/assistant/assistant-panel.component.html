@@ -104,22 +104,8 @@
       [value]="draft()"
       (input)="onInput($event)"
       (keydown)="onKeydown($event)"
-      [placeholder]="dictation.listening() ? 'Słucham…' : 'Zadaj pytanie…'"
+      placeholder="Zadaj pytanie…"
     ></textarea>
-    @if (dictation.support() !== 'checking') {
-      <button
-        type="button"
-        class="kp-assistant__mic"
-        [class.kp-assistant__mic--active]="dictation.listening()"
-        [attr.aria-disabled]="dictation.support() === 'unavailable' ? 'true' : null"
-        [attr.aria-pressed]="dictation.listening()"
-        [attr.aria-label]="dictation.listening() ? 'Zatrzymaj dyktowanie' : 'Dyktuj pytanie'"
-        [title]="dictation.support() === 'unavailable' ? 'Dyktowanie działa tylko z rozpoznawaniem mowy na urządzeniu' : 'Dyktuj pytanie'"
-        (click)="toggleDictation()"
-      >
-        <kp-icon name="kp-mic" [size]="18" />
-      </button>
-    }
     <button type="submit" class="kp-assistant__send" [disabled]="!draft().trim() || pending()" aria-label="Wyślij pytanie">
       <kp-icon name="kp-send" [size]="15" />
     </button>

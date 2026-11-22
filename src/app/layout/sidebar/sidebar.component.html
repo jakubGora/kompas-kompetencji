@@ -35,21 +35,6 @@
 <ng-template #accountMenu>
   <div class="kp-menu kp-sidebar__menu" cdkMenu>
     @if (session.isDemo) {
-      <p class="kp-menu__label" aria-hidden="true">Scenariusz danych · dzień demo {{ session.today() | kpDate }}</p>
-      @for (scenario of demo.scenarios(); track scenario.id) {
-        <button
-          type="button"
-          class="kp-menu__item"
-          cdkMenuItemRadio
-          [cdkMenuItemChecked]="scenario.id === demo.scenarioId()"
-          (cdkMenuItemTriggered)="loadScenario(scenario.id)"
-        >
-          <span>
-            {{ scenario.label }}
-            <span class="kp-menu__item-meta">{{ scenario.description }}</span>
-          </span>
-        </button>
-      }
       <button type="button" class="kp-menu__item" cdkMenuItem (cdkMenuItemTriggered)="reset()">
         <kp-icon name="reset" [size]="16" />
         Przywróć dane startowe

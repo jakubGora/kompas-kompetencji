@@ -5,20 +5,18 @@ import type { AppNotification, ReminderLogEntry, ReminderRule } from '@core/doma
 import type { AppUser, Employee, OrgUnit } from '@core/domain/people.model';
 import type { Position } from '@core/domain/position.model';
 import type { Candidate } from '@core/domain/recruitment.model';
-import { suggestCriterionScore } from '@core/domain/scoring';
 import modelJson from './data/model-competencies.json';
 import { SEED_NOTIFICATIONS, SEED_REMINDER_LOG, SEED_REMINDER_RULES } from './data/notifications';
 import { EMPLOYEES, ORG_UNITS, USERS } from './data/org';
 import { POSITIONS } from './data/positions';
 import { SEED_CANDIDATES } from './data/recruitment';
-import { applyScenario, type DemoScenario } from './data/scenarios';
 import { seedCases } from './data/seed-cases';
 import type { StoredCase } from './engine/case-factory';
 import { collapseWhitespace } from './engine/text';
 import { notFound } from './http';
 
 const STORAGE_KEY = 'kompas.mock-db';
-const STATE_VERSION = 8;
+const STATE_VERSION = 9;
 
 /** „Dziś” w danych demonstracyjnych — termin oceny Anny Nowak. */
 export const DEMO_TODAY: IsoDate = '2026-11-21';
@@ -26,7 +24,7 @@ const DEFAULT_USER_ID = 'u-piotr';
 
 export interface MockState {
   readonly version: number;
-  readonly scenarioId: DemoScenario['id'];
+  readonly scenarioId: 'demo';
   readonly today: IsoDate;
   readonly sessionUserId: string;
   readonly cases: StoredCase[];
@@ -34,6 +32,8 @@ export interface MockState {
   readonly reminderRules: ReminderRule[];
   readonly reminderLog: ReminderLogEntry[];
   readonly candidates: Candidate[];
+  /** Pracownicy dodani w tej przestrzeni (seed + te). */
+  readonly employees: Employee[];
 }
 
 function normalizeModel(raw: CompetencyModel): CompetencyModel {
@@ -73,8 +73,8 @@ export class MockDb {
     this.persist();
   }
 
-  reset(scenarioId: DemoScenario['id'] = 'demo', sessionUserId = this.current.sessionUserId): void {
-    this.current = this.seed(scenarioId, sessionUserId);
+  reset(sessionUserId = this.current.sessionUserId): void {
+    this.current = this.seed(sessionUserId);
     this.persist();
   }
 
@@ -95,10 +95,24 @@ export class MockDb {
     return this.user(this.current.sessionUserId);
   }
 
+  employees(): readonly Employee[] {
+    return [...EMPLOYEES, ...this.current.employees];
+  }
+
   employee(id: string): Employee {
-    const found = EMPLOYEES.find((candidate) => candidate.id === id);
+    const found = this.employees().find((candidate) => candidate.id === id);
     if (!found) throw notFound('pracownik');
     return found;
+  }
+
+  saveEmployee(employee: Employee): Employee {
+    this.update((state) => ({
+      ...state,
+      employees: state.employees.some((item) => item.id === employee.id)
+        ? state.employees.map((item) => (item.id === employee.id ? employee : item))
+        : [...state.employees, employee],
+    }));
+    return employee;
   }
 
   position(id: string): Position {
@@ -150,28 +164,24 @@ export class MockDb {
     } catch {
       // Uszkodzony stan — zaczynamy od danych startowych.
     }
-    const seeded = this.seed('demo', DEFAULT_USER_ID);
+    const seeded = this.seed(DEFAULT_USER_ID);
     this.current = seeded;
     this.persist();
     return seeded;
   }
 
-  private seed(scenarioId: DemoScenario['id'], sessionUserId: string): MockState {
-    const cases = applyScenario(seedCases(), scenarioId, (c, criterionId) => {
-      const rating = c.ratings.find((candidate) => candidate.criterionId === criterionId);
-      const suggestion = suggestCriterionScore(c.path, rating?.indicators ?? [], this.indicatorCount(criterionId));
-      return { points: suggestion.points, average: suggestion.average };
-    });
+  private seed(sessionUserId: string): MockState {
     return {
       version: STATE_VERSION,
-      scenarioId,
+      scenarioId: 'demo',
       today: DEMO_TODAY,
       sessionUserId,
-      cases,
+      cases: seedCases(),
       notifications: [...SEED_NOTIFICATIONS],
       reminderRules: [...SEED_REMINDER_RULES],
       reminderLog: [...SEED_REMINDER_LOG],
       candidates: [...SEED_CANDIDATES],
+      employees: [],
     };
   }
 

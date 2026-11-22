@@ -89,7 +89,9 @@
             <label class="kp-option__body" [for]="'kp-expectation-' + row.id">
               <span class="kp-option__title">{{ row.label }}</span>
               <span class="kp-option__text">
-                @if (row.text) {
+                @if (narrativeHidden()) {
+                  Ukryte do podpisu części I.
+                } @else if (row.text) {
                   {{ row.text }}
                 } @else if (store.busy() === 'draft-expectations') {
                   Asystent szkicuje oczekiwanie…
@@ -144,7 +146,9 @@
       </div>
       <div class="kp-preliminary__goals">
         <p class="kp-preliminary__term-label">Cele na okres</p>
-        @if (goals().length > 0) {
+        @if (narrativeHidden()) {
+          <p class="kp-preliminary__goals-text kp-muted">Cele zobaczysz po podpisaniu części I.</p>
+        } @else if (goals().length > 0) {
           <p class="kp-preliminary__goals-text">
             @for (goal of goals(); track goal.id; let last = $last) {
               {{ goal.text }}{{ last ? '' : ' • ' }}

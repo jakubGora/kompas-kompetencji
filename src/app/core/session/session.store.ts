@@ -49,11 +49,6 @@ export class SessionStore {
     }
   }
 
-  async loadScenario(scenarioId: string): Promise<void> {
-    const { landing } = await firstValueFrom(this.api.loadScenario(scenarioId));
-    this.reloadAt(landing);
-  }
-
   async resetDemo(): Promise<void> {
     const { landing } = await firstValueFrom(this.api.reset());
     this.reloadAt(landing);

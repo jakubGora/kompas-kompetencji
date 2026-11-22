@@ -228,7 +228,10 @@ export interface CaseDeadlines {
 export interface CaseAccess {
   readonly role: 'oceniajacy' | 'kierujacy' | 'kadry';
   readonly canEdit: boolean;
-  /** Widok kadr: bez notatek z obserwacji, zaznaczeń zachowań i notatek z rozmów. */
+  /**
+   * Widok kadr: bez obserwacji, zaznaczeń zachowań i notatek.
+   * Uzasadnienie i wnioski dochodzą po zapoznaniu z arkuszem, oczekiwania — po podpisie części I.
+   */
   readonly redacted: boolean;
 }
 

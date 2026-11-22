@@ -104,6 +104,7 @@
 
 .kp-rating__matrix-corner {
   width: 220px;
+  padding-left: var(--kp-space-4) !important;
   text-align: left !important;
 }
 
@@ -128,4 +129,12 @@
 .kp-rating__matrix tbody tr + tr th,
 .kp-rating__matrix tbody tr + tr td {
   border-top: 1px solid var(--kp-color-border-subtle);
+}
+
+.kp-rating__matrix tbody tr {
+  vertical-align: top;
+}
+
+.kp-rating__matrix tbody td {
+  vertical-align: top;
 }

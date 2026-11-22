@@ -9,7 +9,6 @@ import { FRAGMENTS, sourcesWithCounts } from '../src/app/mock-backend/data/knowl
 import { EMPLOYEES, ORG_UNITS, USERS } from '../src/app/mock-backend/data/org';
 import { POSITIONS } from '../src/app/mock-backend/data/positions';
 import { RECRUITMENTS } from '../src/app/mock-backend/data/recruitment';
-import { SCENARIOS } from '../src/app/mock-backend/data/scenarios';
 import { MockDb } from '../src/app/mock-backend/db';
 
 const target = resolve(process.argv[2] ?? '../kk_rag/app/kompas/seed');
@@ -26,14 +25,12 @@ write('reference.json', {
   orgUnits: ORG_UNITS,
   positions: POSITIONS,
   recruitments: RECRUITMENTS,
-  scenarios: SCENARIOS,
+  scenarios: [],
 });
 write('knowledge.json', { sources: sourcesWithCounts(), fragments: FRAGMENTS });
 write('intents.json', { formal: INTENTS, conversation: CONVERSATION_INTENTS });
 
-for (const scenario of SCENARIOS) {
-  db.reset(scenario.id, 'u-piotr');
-  write(`state-${scenario.id}.json`, db.state);
-}
+db.reset('u-piotr');
+write('state-demo.json', db.state);
 
 console.log(`Zapisano dane demonstracyjne w ${target}`);

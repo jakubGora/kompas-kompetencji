@@ -4,17 +4,17 @@
       <h3 class="kp-final__title" id="kp-final-title">Twoja ostateczna ocena – wybierz poziom</h3>
       @if (!suggestion().insufficientEvidence) {
         <p class="kp-final__hint">
-          AI sugeruje <strong>{{ suggestedLabel() || '—' }}</strong>
+          Narzędzie sugeruje <strong>{{ suggestedLabel() || '—' }}</strong>
           @if (suggestion().average !== null) {
             na podstawie średniej {{ suggestion().average | kpScore }} z {{ suggestion().assessedCount }} wskaźników.
           }
         </p>
       } @else {
-        <p class="kp-final__hint">Zaznacz zachowania albo „nie miałem okazji” — wtedy pojawi się sugestia AI.</p>
+        <p class="kp-final__hint">Zaznacz zachowania albo „nie miałem okazji” — wtedy pojawi się sugestia narzędzia.</p>
       }
     </div>
     @if (editable() && suggestion().points !== null && decision()?.points !== suggestion().points) {
-      <button type="button" class="kp-link-button" (click)="acceptSuggestion()">Przyjmij sugestię AI</button>
+      <button type="button" class="kp-link-button" (click)="acceptSuggestion()">Przyjmij sugestię narzędzia</button>
     }
   </div>
 
@@ -36,7 +36,7 @@
         <span class="kp-final__points">{{ option.points }}</span>
         <span class="kp-final__label">{{ shortLabel(option.points) }}</span>
         @if (option.points === suggestion().points) {
-          <span class="kp-final__tag"><kp-icon name="sparkles" [size]="12" /> AI</span>
+          <span class="kp-final__tag">Sugestia</span>
         }
       </label>
     }
@@ -45,7 +45,7 @@
   @if (decision(); as d) {
     <kp-field
       class="kp-final__rationale"
-      [label]="deviates() ? 'Uzasadnienie odstępstwa od sugestii' : 'Komentarz do oceny'"
+      [label]="deviates() ? 'Uzasadnienie odstępstwa od sugestii narzędzia' : 'Komentarz do oceny'"
       [required]="deviates()"
       [optionalHint]="!deviates()"
       [error]="rationaleError()"

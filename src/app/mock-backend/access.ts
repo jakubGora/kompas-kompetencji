@@ -1,4 +1,5 @@
-import type { AssessmentCase, CaseAccess } from '@core/domain/assessment.model';
+import type { AssessmentCase, CaseAccess, CaseConclusion, PositionReview } from '@core/domain/assessment.model';
+import { historySummaryForHr } from '@core/domain/hr-view';
 import type { AppUser } from '@core/domain/people.model';
 import type { StoredCase } from './engine/case-factory';
 import { forbidden } from './http';
@@ -20,9 +21,21 @@ export function canSeeCase(c: StoredCase, user: AppUser): boolean {
   return caseAccess(c, user) !== null;
 }
 
+function withoutOverrideReason(review: PositionReview): PositionReview {
+  const { overrideReason: _reason, ...rest } = review;
+  return rest;
+}
+
+/** Narracja końcowego arkusza zostaje pusta, dopóki oceniany się z nim nie zapozna. */
+function withoutSheetNarrative(conclusion: CaseConclusion): CaseConclusion {
+  const { justificationAiDraft: _draft, promotionRequest: _request, ...rest } = conclusion;
+  return { ...rest, justification: '', developmentPlan: '', promotionJustification: '' };
+}
+
 /**
- * Widok sprawy dla konkretnej osoby. Kadry widzą przebieg i terminy,
- * ale nie treść obserwacji, zaznaczeń zachowań ani notatek z rozmów.
+ * Widok sprawy dla konkretnej osoby.
+ * Kadry prowadzą proces. Obserwacje i notatki zostają u oceniającego.
+ * Oczekiwania i cele widać po podpisie części I, uzasadnienie i wnioski — po zapoznaniu z oceną.
  */
 export function presentCase(c: StoredCase, user: AppUser): AssessmentCase {
   const access = caseAccess(c, user);
@@ -32,17 +45,27 @@ export function presentCase(c: StoredCase, user: AppUser): AssessmentCase {
   if (!access.redacted) {
     return { ...c, access };
   }
+  const partOneInFile = Boolean(c.preliminary.employeeAcknowledgedAt);
+  const sheetInFile = Boolean(c.conclusion.employeeAcknowledgedAt);
   return {
     ...c,
     access,
     observations: [],
-    preliminary: { ...c.preliminary, notes: '' },
+    preliminary: {
+      ...c.preliminary,
+      notes: '',
+      expectations: partOneInFile ? c.preliminary.expectations : [],
+      goals: partOneInFile ? c.preliminary.goals : [],
+    },
     review: { ...c.review, notes: '', employeePerspective: '', developmentNeeds: '' },
+    positionReview: withoutOverrideReason(c.positionReview),
     ratings: c.ratings.map((rating) => ({
       ...rating,
       indicators: [],
       decision: rating.decision ? { ...rating.decision, rationale: '' } : null,
     })),
+    conclusion: sheetInFile ? c.conclusion : withoutSheetNarrative(c.conclusion),
+    history: c.history.map((event) => ({ ...event, summary: historySummaryForHr(event) })),
   };
 }
 

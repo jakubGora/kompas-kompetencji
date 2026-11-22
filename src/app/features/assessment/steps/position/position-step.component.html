@@ -45,7 +45,11 @@
     @if (deviates()) {
       <div class="kp-status-note kp-status-note--warning kp-osp__deviation">
         <p class="kp-status-note__title">Inny arkusz niż wynika z OSP — rekomendacja asystenta: arkusz {{ analysis()?.recommendedVariant }}</p>
-        <p class="kp-status-note__text">Uzasadnienie: {{ review().overrideReason }}</p>
+        @if (store.redacted()) {
+          <p class="kp-status-note__text">Uzasadnienie odstępstwa zostaje u oceniającego.</p>
+        } @else if (review().overrideReason) {
+          <p class="kp-status-note__text">Uzasadnienie: {{ review().overrideReason }}</p>
+        }
       </div>
     }
 

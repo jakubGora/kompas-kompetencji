@@ -50,16 +50,8 @@ export const routes: Routes = [
         canActivate: [roleGuard('hr')],
         loadComponent: () => import('./features/reminders/reminders.page').then((m) => m.RemindersPage),
       },
-      {
-        path: 'rekrutacje',
-        title: 'Rekrutacje',
-        loadComponent: () => import('./features/recruitment/recruitment.page').then((m) => m.RecruitmentPage),
-      },
-      {
-        path: 'rekrutacje/kandydaci/:candidateId',
-        title: 'Kandydat',
-        loadComponent: () => import('./features/recruitment/candidate.page').then((m) => m.CandidatePage),
-      },
+      { path: 'rekrutacje', pathMatch: 'full', redirectTo: 'pracownicy' },
+      { path: 'rekrutacje/kandydaci/:candidateId', redirectTo: 'pracownicy' },
       {
         path: 'baza-wiedzy',
         title: 'Baza wiedzy',

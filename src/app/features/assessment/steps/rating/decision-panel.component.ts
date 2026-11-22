@@ -6,7 +6,6 @@ import { KpScorePipe } from '@shared/pipes/format.pipes';
 import { CalloutComponent } from '@shared/ui/callout/callout.component';
 import { ControlDirective } from '@shared/ui/form-field/control.directive';
 import { FormFieldComponent } from '@shared/ui/form-field/form-field.component';
-import { IconComponent } from '@shared/ui/icon/icon.component';
 
 export interface DecisionInput {
   readonly points: ScorePoints;
@@ -17,7 +16,7 @@ export interface DecisionInput {
 @Component({
   selector: 'kp-decision-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CalloutComponent, FormFieldComponent, ControlDirective, IconComponent, KpScorePipe],
+  imports: [CalloutComponent, FormFieldComponent, ControlDirective, KpScorePipe],
   templateUrl: './decision-panel.component.html',
   styleUrl: './decision-panel.component.scss',
 })
@@ -41,7 +40,7 @@ export class DecisionPanelComponent {
     return Boolean(decision && suggested !== null && decision.points !== suggested);
   });
   protected readonly rationaleError = computed(() =>
-    this.deviates() && !this.decision()?.rationale.trim() ? 'Ocena różni się od sugestii — wpisz, dlaczego.' : null,
+    this.deviates() && !this.decision()?.rationale.trim() ? 'Ocena różni się od sugestii narzędzia — wpisz, dlaczego.' : null,
   );
   protected readonly mapping = computed(() =>
     this.path() === 'first'

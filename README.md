@@ -12,12 +12,8 @@ Wszystkie ścieżki API (w tym asystent AI) wymagają logowania.
 
 | Rola | Login | Hasło |
 |------|-------|-------|
-| Kierownik (główne demo) | `piotr` | `piotr` |
+| Oceniający | `piotr` | `piotr` |
 | Kadry / HR | `marta` | `marta` |
-| Kierownik | `ewa.mazur` | `ewa` |
-| Kierownik | `karolina` | `karolina` |
-| Kierownik | `tomasz` | `tomasz` |
-| Kierownik | `adam` | `adam` |
 
 ## Uruchomienie
 

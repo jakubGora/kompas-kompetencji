@@ -1,16 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { IndicatorAssessment, Observation } from '@core/domain/assessment.model';
 import type { BehaviorLevel, Indicator } from '@core/domain/competency.model';
-import { levelToPoints, type CriterionSuggestion } from '@core/domain/scoring';
-import type { AssessmentPath } from '@core/domain/assessment.model';
 import { KpDatePipe } from '@shared/pipes/format.pipes';
-import { IconComponent } from '@shared/ui/icon/icon.component';
 
-/** Wiersz siatki: zachowania × poziom + „nie miałem okazji”. */
+/** Wiersz siatki: zachowania × poziom + „nie miałem okazji”. Sugestia punktowa jest przy skali, nie przy opisie. */
 @Component({
   selector: 'kp-indicator-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, KpDatePipe],
+  imports: [KpDatePipe],
   templateUrl: './indicator-card.component.html',
   styleUrl: './indicator-card.component.scss',
 })
@@ -20,8 +17,6 @@ export class IndicatorCardComponent {
   readonly number = input.required<number>();
   readonly observations = input<readonly Observation[]>([]);
   readonly editable = input(false);
-  readonly path = input<AssessmentPath>('periodic');
-  readonly suggestion = input<CriterionSuggestion | null>(null);
   readonly changed = output<IndicatorAssessment>();
 
   protected readonly name = computed(() => `kp-indicator-${this.indicator().id}`);
@@ -35,13 +30,6 @@ export class IndicatorCardComponent {
         return aMatch - bMatch || b.date.localeCompare(a.date);
       }),
   );
-
-  protected isAiSuggested(level: BehaviorLevel): boolean {
-    const suggestion = this.suggestion();
-    if (!suggestion || suggestion.points === null || this.assessment().noBasis) return false;
-    if (this.assessment().level !== null && this.assessment().level !== level) return false;
-    return levelToPoints(this.path(), level) === suggestion.points;
-  }
 
   protected selectLevel(level: BehaviorLevel): void {
     const current = this.assessment();

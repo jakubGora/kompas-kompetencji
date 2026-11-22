@@ -75,6 +75,10 @@ export class PreliminaryStepComponent {
     return !meeting || !isAfter(meeting, this.deadlines().preliminaryDueDate);
   });
   protected readonly goals = computed(() => this.c().preliminary.goals.filter((goal) => goal.text.trim()));
+  /** Przed podpisem części I kadry nie widzą oczekiwań ani celów — puste pole nie znaczy, że ich nie ma. */
+  protected readonly narrativeHidden = computed(
+    () => this.store.redacted() && !this.c().preliminary.employeeAcknowledgedAt,
+  );
 
   private readonly drafts = signal<Partial<Record<CriterionId, string>>>({});
   protected readonly expectations = computed<readonly ExpectationRow[]>(() => {

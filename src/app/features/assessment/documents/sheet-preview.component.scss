@@ -1,4 +1,4 @@
-.kp-preview__header {
+.kp-preview__toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -9,7 +9,7 @@
 
 .kp-preview__title {
   margin: 0 0 var(--kp-space-1);
-  font-size: var(--kp-font-size-3xl);
+  font-size: var(--kp-font-size-2xl);
   font-weight: var(--kp-font-weight-semibold);
 }
 
@@ -22,191 +22,251 @@
   margin-bottom: var(--kp-space-4);
 }
 
-.kp-preview__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: var(--kp-space-4);
-  align-items: start;
-
-  @media (max-width: 1100px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.kp-preview__stage {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--kp-space-5);
 }
 
-.kp-preview__docs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--kp-space-4);
-
-  @media (max-width: 900px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.kp-doc {
+/* Oficjalny wzór — czarno-biały formularz jak w DOCX z zadania */
+.kp-form {
   position: relative;
-  padding: var(--kp-space-5) var(--kp-space-6);
+  width: min(100%, 210mm);
+  padding: 14mm 12mm;
   overflow: hidden;
-  border: 1px solid var(--kp-color-border-subtle);
-  border-radius: var(--kp-radius-lg);
+  border: 1px solid #bbb;
   background: #fff;
-  box-shadow: var(--kp-shadow-sm);
-  color: #1a1a1a;
-  font-size: 12px;
-  line-height: 1.45;
+  box-shadow: 0 8px 28px rgb(17 17 17 / 0.08);
+  color: #111;
+  font-family: 'Times New Roman', Times, 'Liberation Serif', serif;
+  font-size: 11px;
+  line-height: 1.35;
 
   &--draft {
-    background: linear-gradient(180deg, #fff, #faf8ff);
+    background: #fff;
   }
 }
 
-.kp-doc__watermark {
+.kp-form__watermark {
   position: absolute;
   top: 42%;
   left: 50%;
   z-index: 0;
-  color: rgb(127 57 222 / 0.08);
+  color: rgb(0 0 0 / 0.06);
   font-size: 64px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   transform: translate(-50%, -50%) rotate(-28deg);
   pointer-events: none;
 }
 
-.kp-doc > :not(.kp-doc__watermark) {
+.kp-form > :not(.kp-form__watermark) {
   position: relative;
   z-index: 1;
 }
 
-.kp-doc__head {
-  margin-bottom: var(--kp-space-4);
-  padding-bottom: var(--kp-space-3);
-  border-bottom: 1px solid var(--kp-color-border-subtle);
+.kp-form__head {
+  margin-bottom: 14px;
+  text-align: center;
 }
 
-.kp-doc__office {
+.kp-form__annex {
+  margin: 0 0 4px;
+  text-align: right;
+  font-size: 10px;
+}
+
+.kp-form__wzor {
   margin: 0;
-  color: var(--kp-color-text-muted);
   font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.kp-form__title {
+  margin: 6px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
-.kp-doc__badge {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-weight: 600;
+.kp-form__subtitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
-.kp-doc__meta {
-  display: grid;
-  gap: 6px;
-  margin: 0 0 var(--kp-space-4);
-
-  div {
-    display: grid;
-    grid-template-columns: 110px minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  dt {
-    color: var(--kp-color-text-muted);
-  }
-
-  dd {
-    margin: 0;
-  }
+.kp-form__part {
+  margin-bottom: 18px;
 }
 
-.kp-doc__section {
-  margin: var(--kp-space-4) 0 var(--kp-space-2);
+.kp-form__part-title {
+  margin: 0 0 8px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.03em;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.kp-doc__criteria,
-.kp-doc__list {
-  margin: 0;
-  padding-left: 1.1rem;
-  display: grid;
-  gap: 6px;
-
-  strong {
-    display: block;
-  }
-
-  span {
-    color: var(--kp-color-text-muted);
-  }
-}
-
-.kp-doc__scores {
+.kp-form__table,
+.kp-form__criteria,
+.kp-form__scores {
   width: 100%;
+  margin: 0 0 10px;
   border-collapse: collapse;
-  margin-bottom: var(--kp-space-3);
+  table-layout: fixed;
+
+  caption {
+    caption-side: top;
+    padding: 0 0 4px;
+    color: #111;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
 
   th,
   td {
-    padding: 4px 6px;
-    border-bottom: 1px solid #eee;
-    text-align: center;
-    font-size: 11px;
+    padding: 5px 7px;
+    border: 1px solid #111;
+    vertical-align: top;
+    word-wrap: break-word;
   }
 
   th[scope='row'] {
+    width: 38%;
+    background: #f3f3f3;
+    font-weight: 600;
     text-align: left;
-    font-weight: 500;
+  }
+}
+
+.kp-form__criteria {
+  th {
+    background: #f3f3f3;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: left;
   }
 
+  ol {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+}
+
+.kp-form__scores {
   thead th {
-    color: var(--kp-color-text-muted);
+    background: #f3f3f3;
+    font-size: 9px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  th[scope='row'] {
+    width: auto;
+    background: #fff;
     font-weight: 600;
   }
 
   td {
-    color: var(--kp-color-primary);
+    width: 3.4rem;
+    text-align: center;
     font-weight: 700;
   }
 }
 
-.kp-doc__result {
-  margin: 0 0 var(--kp-space-3);
-  padding: var(--kp-space-3);
-  border-radius: var(--kp-radius-md);
-  background: var(--kp-color-surface-tint);
-  font-size: 12px;
-}
-
-.kp-doc__text {
-  margin: 0;
-  min-height: 3.2em;
+.kp-form__table--block td,
+.kp-form__block {
+  min-height: 4.5em;
   white-space: pre-wrap;
 }
 
-.kp-doc__signs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--kp-space-4);
-  margin-top: var(--kp-space-5);
-  padding-top: var(--kp-space-4);
-  border-top: 1px solid var(--kp-color-border-subtle);
-  color: var(--kp-color-text-muted);
-  font-size: 11px;
-
-  span {
-    display: block;
-    min-height: 1.2em;
-    margin-bottom: 4px;
-    color: var(--kp-color-text);
-    font-weight: 600;
-  }
+.kp-form__center {
+  text-align: center;
+  vertical-align: middle !important;
 }
 
-.kp-preview__aside {
+.kp-form__blank {
+  color: #666;
+}
+
+.kp-form__hint {
+  margin-top: 2px;
+  color: #444;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.kp-form__outcome-cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.kp-form__mark {
+  font-weight: 700;
+}
+
+.kp-form__confirm {
+  margin: 8px 0 0;
+  padding: 8px;
+  border: 1px solid #111;
+}
+
+.kp-form__confirm p,
+.kp-form__confirm ul {
+  margin: 0 0 8px;
+}
+
+.kp-form__confirm ul {
+  padding-left: 1.2rem;
+}
+
+.kp-form__signs {
   display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.kp-form__sign {
+  display: grid;
+  gap: 2px;
+  font-size: 10px;
+  text-align: center;
+}
+
+.kp-form__line {
+  display: block;
+  min-height: 1.3em;
+  margin-bottom: 2px;
+  border-bottom: 1px solid #111;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.kp-form__pouczenie {
+  margin-top: 12px !important;
+  font-size: 10px;
+}
+
+.kp-form__note {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-style: italic;
+}
+
+.kp-preview__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--kp-space-3);
+  margin-bottom: var(--kp-space-5);
+  font-family: var(--kp-font-family);
 }
 
 .kp-aside-card {
@@ -255,23 +315,51 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--kp-space-3);
-  margin-top: var(--kp-space-6);
+  margin-top: var(--kp-space-2);
+  font-family: var(--kp-font-family);
+}
+
+@media (max-width: 720px) {
+  .kp-form {
+    padding: 12px;
+  }
+
+  .kp-form__signs {
+    grid-template-columns: 1fr;
+  }
+
+  .kp-form__scores td {
+    width: 2.4rem;
+  }
 }
 
 @media print {
-  .kp-preview__layout {
+  .kp-preview__stage {
     display: block;
+    margin: 0;
   }
 
-  .kp-preview__docs {
-    display: block;
-  }
-
-  .kp-doc {
-    break-after: page;
-    box-shadow: none;
-    border: 0;
-    border-radius: 0;
+  .kp-form {
+    width: 100%;
     max-width: none;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .kp-form__part {
+    break-after: page;
+  }
+
+  .kp-form__part:last-child {
+    break-after: auto;
+  }
+
+  .kp-form__table th[scope='row'],
+  .kp-form__criteria th,
+  .kp-form__scores thead th {
+    background: transparent !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }

@@ -163,22 +163,115 @@ export function suggestedQuestions(path: AssessmentPath | undefined, mode: 'form
 
 // — Plan rozmowy oceniającej —
 
+const KIND_RANK = { contrast: 0, choice: 1, timing: 2, result: 3 } as const;
+const FOLLOW = {
+  contrast: [
+    'Czego konkretnie zabrakło i jak uzupełnimy to następnym razem?',
+    'Co mimo tego braku udało się doprowadzić do końca?',
+  ],
+  choice: [
+    'Którą możliwość wybrano i co o tym zdecydowało?',
+    'Jakie były skutki możliwości, której nie użyto?',
+  ],
+  timing: [
+    'Co z tego zdążyło dojść na czas, a co nie?',
+    'Kto poza Tobą musiał zareagować na ten sygnał?',
+  ],
+  result: [
+    'Jaki był skutek dla osób, które na tym polegały?',
+    'Co z tego warto powtórzyć w kolejnym okresie?',
+    'Co w tej sytuacji zależało od innych osób, a co od Ciebie?',
+  ],
+} as const;
+const OPENING = [
+  'W sytuacji „{title}” ({date}) {fact}. {ask}',
+  'Wracając do sytuacji „{title}” ({date}): {fact}. {ask}',
+  '{date}, „{title}” — {fact}. {ask}',
+];
+const GAP = [
+  'Opowiedz o jednej sytuacji z tego okresu, w której było widać: „{text}”.',
+  'Kiedy ostatnio nie wyszło coś w tym rodzaju: „{text}”? Co stanęło na przeszkodzie?',
+  'Jak to wygląda u Ciebie na co dzień: „{text}”? Podaj przykład z okresu oceny.',
+];
+
+function clausesOf(text: string): string[] {
+  const rough = text
+    .split(/\s*[;.]+\s*/u)
+    .map((part) => part.replace(/\s+/g, ' ').trim().replace(/^[ .;]+|[ .;]+$/g, ''))
+    .filter(Boolean);
+  const out: string[] = [];
+  for (const part of rough) {
+    if (kindOf(part) === 'contrast') {
+      out.push(part);
+      continue;
+    }
+    const bits = part
+      .split(/\s+i\s+/u)
+      .map((bit) => bit.replace(/^[ .;]+|[ .;]+$/g, ''))
+      .filter((bit) => bit.length >= 12);
+    out.push(...(bits.length > 0 ? bits : [part]));
+  }
+  return out.length > 0 ? out : ['tę sytuację'];
+}
+
+function lead(clause: string): string {
+  const text = clause.trim().replace(/\.+$/u, '');
+  if (!text) return 'tę sytuację';
+  return /[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]/u.test(text[0] ?? '') ? text[0]!.toLowerCase() + text.slice(1) : text;
+}
+
+function kindOf(clause: string): keyof typeof FOLLOW {
+  const low = ` ${normalize(clause)} `;
+  if ([' ale ', ' jednak ', ' niepeln', ' mimo ', ' brak '].some((token) => low.includes(token))) return 'contrast';
+  if (['wariant', 'zaproponow', 'rozwiaz'].some((token) => low.includes(token))) return 'choice';
+  if (['wczesniej', 'termin', 'ryzyk', 'opozn'].some((token) => low.includes(token))) return 'timing';
+  return 'result';
+}
+
+function fill(template: string, values: Readonly<Record<string, string>>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? '');
+}
+
+function observationQuestion(observation: { title: string; date: string; description: string }, use: number): string {
+  const clauses = clausesOf(observation.description);
+  const order = clauses
+    .map((_, index) => index)
+    .sort((a, b) => KIND_RANK[kindOf(clauses[a]!)] - KIND_RANK[kindOf(clauses[b]!)] || clauses[b]!.length - clauses[a]!.length);
+  const clause = clauses[order[use % order.length]!]!;
+  const follow = FOLLOW[kindOf(clause)];
+  return fill(OPENING[use % OPENING.length]!, {
+    title: observation.title,
+    date: formatDatePl(observation.date),
+    fact: lead(clause),
+    ask: follow[use % follow.length]!,
+  });
+}
+
+function gapQuestion(indicatorText: string, use: number): string {
+  return fill(GAP[use % GAP.length]!, { text: truncate(indicatorText, 90) });
+}
+
 export function buildConversationPlan(c: AssessmentCaseData, model: CompetencyModel, generatedAt: IsoDateTime): ConversationPlan {
   const criteria = caseCriteria(c);
+  const seen = new Map<string, number>();
+  let gapUses = 0;
   const items: ConversationPlanItem[] = criteria.map((criterionId) => {
     const observations = c.observations
       .filter((o) => o.criterionIds.includes(criterionId))
       .sort((a, b) => a.date.localeCompare(b.date));
     const competency = model.competencies.find((candidate) => candidate.id === criterionId);
     const coveredIndicators = new Set(observations.flatMap((o) => o.indicatorIds));
-    const gaps = (competency?.indicators ?? [])
-      .filter((indicator) => !coveredIndicators.has(indicator.id))
-      .slice(0, 2)
-      .map((indicator) => `Brak obserwacji: „${truncate(indicator.text, 90)}” — zapytaj o przykład z okresu oceny.`);
-    const questions = [
-      ...observations.slice(-2).map((o) => `Jak oceniasz sytuację „${o.title}” (${formatDatePl(o.date)})? Co zadziałało, a co warto zrobić inaczej?`),
-      ...(gaps.length > 0 ? [`Czy możesz podać przykład z ostatnich miesięcy dotyczący kryterium „${criterionName(criterionId).toLowerCase()}”?`] : []),
-    ];
+    const missing = (competency?.indicators ?? []).filter((indicator) => !coveredIndicators.has(indicator.id)).slice(0, 2);
+    const gaps = missing.map((indicator) => `Brak obserwacji: „${truncate(indicator.text, 90)}” — zapytaj o przykład z okresu oceny.`);
+    const questions = observations.slice(-2).map((observation) => {
+      const use = seen.get(observation.id) ?? 0;
+      seen.set(observation.id, use + 1);
+      return observationQuestion(observation, use);
+    });
+    for (const indicator of questions.length > 0 ? missing.slice(0, 1) : missing) {
+      questions.push(gapQuestion(indicator.text, gapUses));
+      gapUses += 1;
+    }
     return {
       criterionId,
       facts: observations.map((o) => ({ observationId: o.id, date: o.date, text: `${o.title}: ${truncate(o.description, 140)}` })),

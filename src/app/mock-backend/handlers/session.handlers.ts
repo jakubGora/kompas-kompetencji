@@ -2,9 +2,7 @@ import type { DemoAccount, DemoInfo, SessionInfo } from '@core/api/api.types';
 import { pluralPl } from '@core/domain/date';
 import type { AppUser, OrgUnit } from '@core/domain/people.model';
 import { USERS, publicUser, type SeedUser } from '../data/org';
-import { SCENARIOS } from '../data/scenarios';
 import type { MockDb } from '../db';
-import { badRequest } from '../http';
 import type { MockRouter } from '../router';
 
 function rootUnit(db: MockDb, unit: OrgUnit): OrgUnit {
@@ -48,7 +46,7 @@ function demoInfo(db: MockDb): DemoInfo {
   return {
     scenarioId: db.state.scenarioId,
     today: db.state.today,
-    scenarios: SCENARIOS,
+    scenarios: [],
     accounts,
   };
 }
@@ -57,17 +55,8 @@ export function registerSessionRoutes(router: MockRouter): void {
   router
     .get('/session', ({ db, user }) => sessionInfo(db, user))
     .get('/demo', ({ db }) => demoInfo(db))
-    .post('/demo/scenario', ({ db, body }) => {
-      const { scenarioId } = (body ?? {}) as { scenarioId?: string };
-      const scenario = SCENARIOS.find((candidate) => candidate.id === scenarioId);
-      if (!scenario) {
-        throw badRequest('Nieznany scenariusz demonstracyjny.');
-      }
-      db.reset(scenario.id, 'u-piotr');
-      return { landing: scenario.landing };
-    })
     .post('/demo/reset', ({ db }) => {
-      db.reset('demo');
+      db.reset();
       return { landing: '/' };
     });
 }

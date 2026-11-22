@@ -17,7 +17,7 @@ nav {
   grid-template-columns: repeat(var(--_count, 7), minmax(112px, 1fr));
   column-gap: $gap;
   margin: 0;
-  padding: 0;
+  padding: 8px 0 0;
   list-style: none;
 }
 

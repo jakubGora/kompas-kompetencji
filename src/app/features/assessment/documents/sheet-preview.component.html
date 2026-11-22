@@ -1,195 +1,564 @@
 <div class="kp-preview kp-no-print">
-  <header class="kp-preview__header">
+  <header class="kp-preview__toolbar">
     <div>
-      <h1 class="kp-preview__title">{{ isFirst() ? 'Arkusz pierwszej oceny' : 'Arkusz oceny okresowej' }}</h1>
-      <p class="kp-muted">
+      <h1 class="kp-preview__title">{{ toolbarTitle() }}</h1>
+      <p class="kp-muted kp-text-sm">
         {{ c().employee.fullName }}
-        @if (variant(); as v) {
-          · Arkusz {{ v }}
+        · układ zgodny ze wzorem z zadania
+        ·
+        @if (generated()) {
+          dokument do podpisu
+        } @else {
+          szkic roboczy
         }
-        · dane demonstracyjne
       </p>
     </div>
     <div class="kp-cluster">
       @if (!generated()) {
-        <span class="kp-preview__note">Podgląd roboczy — arkusz do podpisu wygenerujesz w ostatnim kroku.</span>
+        <span class="kp-preview__note">Arkusz do podpisu wygenerujesz w ostatnim kroku.</span>
       }
       <button type="button" kpButton icon="printer" (click)="print()">Drukuj / zapisz PDF</button>
     </div>
   </header>
+
+  @if (hrBanner(); as banner) {
+    <kp-callout class="kp-sheet-redacted" tone="neutral" icon="lock">{{ banner }}</kp-callout>
+  }
 </div>
 
-@if (store.redacted()) {
-  <kp-callout class="kp-no-print kp-sheet-redacted" tone="neutral" icon="lock">
-    W widoku kadr treść uzasadnienia i oczekiwań jest ukryta. Pełny arkusz trafia do akt po podpisaniu.
-  </kp-callout>
-}
+<div class="kp-preview__stage">
+  <article class="kp-form kp-print-root" [class.kp-form--draft]="!generated()" aria-label="Wzór arkusza oceny">
+    @if (!generated()) {
+      <div class="kp-form__watermark" aria-hidden="true">SZKIC</div>
+    }
 
-<div class="kp-preview__layout">
-  <div class="kp-preview__docs">
-    <article class="kp-doc kp-print-root" [class.kp-doc--draft]="!generated()" aria-label="Część I arkusza">
-      @if (!generated()) {
-        <div class="kp-doc__watermark" aria-hidden="true">SZKIC</div>
+    <header class="kp-form__head">
+      <p class="kp-form__annex">{{ annexLabel() }}</p>
+      <p class="kp-form__wzor">WZÓR</p>
+      <h2 class="kp-form__title">{{ formHeading() }}</h2>
+      @if (formSubtitle(); as sub) {
+        <p class="kp-form__subtitle">{{ sub }}</p>
       }
-      <header class="kp-doc__head">
-        <p class="kp-doc__office">{{ c().position.office }}</p>
-        <p class="kp-doc__badge">{{ isFirst() ? 'Pierwsza ocena' : 'ARKUSZ ' + (variant() ?? '—') }} · CZĘŚĆ I</p>
-      </header>
+    </header>
 
-      <dl class="kp-doc__meta">
-        <div><dt>Oceniany</dt><dd>{{ c().employee.fullName }} · {{ c().position.title }}</dd></div>
-        <div><dt>Komórka</dt><dd>{{ c().orgUnitName }}</dd></div>
-        <div><dt>Oceniający</dt><dd>{{ c().evaluator.fullName }}</dd></div>
-        @if (isFirst()) {
-          <div><dt>Zatrudnienie</dt><dd>{{ c().employee.employment.since | kpDate }}</dd></div>
-          <div><dt>Rozmowa wstępna</dt><dd>{{ c().preliminary.meetingDate | kpDate }}</dd></div>
-          <div>
-            <dt>Sprawozdanie</dt>
-            <dd>{{ c().preliminary.reportWindow?.from | kpDate }} – {{ c().preliminary.reportWindow?.to | kpDate }}</dd>
-          </div>
-        } @else {
-          <div><dt>Okres oceny</dt><dd>od {{ c().preliminary.employeeAcknowledgedAt | kpDate }}</dd></div>
-          <div><dt>Termin oceny</dt><dd>{{ c().preliminary.assessmentDueDate | kpDate }}</dd></div>
-        }
-      </dl>
+    <!-- ========== CZĘŚĆ I / OGÓLNA ========== -->
+    <section class="kp-form__part" aria-label="Część I">
+      <h3 class="kp-form__part-title">{{ isFirst() ? 'Część ogólna' : 'Część I' }}</h3>
 
-      <h2 class="kp-doc__section">Kryteria i oczekiwania</h2>
-      <ol class="kp-doc__criteria">
-        @for (row of rows(); track row.id) {
-          <li>
-            <strong>{{ row.no }}. {{ row.name }}</strong>
-            <span>{{ row.expectation || '—' }}</span>
-          </li>
-        }
-      </ol>
-
-      @if (!isFirst() && c().preliminary.goals.length > 0) {
-        <h2 class="kp-doc__section">Cele</h2>
-        <ul class="kp-doc__list">
-          @for (goal of c().preliminary.goals; track goal.id) {
-            <li>{{ goal.text }}</li>
-          }
-        </ul>
-      }
-
-      <div class="kp-doc__signs">
-        <div><span>{{ c().preliminary.employeeAcknowledgedAt | kpDate }}</span>podpis ocenianego</div>
-        <div><span></span>podpis oceniającego</div>
-      </div>
-    </article>
-
-    <article class="kp-doc kp-print-root" [class.kp-doc--draft]="!generated()" aria-label="Część II arkusza">
-      <header class="kp-doc__head">
-        <p class="kp-doc__office">{{ c().position.office }}</p>
-        <p class="kp-doc__badge">{{ isFirst() ? 'Pierwsza ocena' : 'ARKUSZ ' + (variant() ?? '—') }} · CZĘŚĆ II</p>
-      </header>
-
-      <h2 class="kp-doc__section">Oceny cząstkowe</h2>
-      <table class="kp-doc__scores">
-        <thead>
-          <tr>
-            <th scope="col">Kryterium</th>
-            @for (col of scaleColumns(); track col.points) {
-              <th scope="col">{{ col.points }}</th>
-            }
-          </tr>
-        </thead>
+      <table class="kp-form__table">
+        <caption>Nazwa urzędu</caption>
         <tbody>
-          @for (row of rows(); track row.id) {
+          <tr>
+            <th scope="row">Nazwa urzędu</th>
+            <td>{{ c().position.office }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="kp-form__table">
+        <caption>Dane ocenianego</caption>
+        <tbody>
+          <tr>
+            <th scope="row">Imię</th>
+            <td>{{ employeeName().first }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Nazwisko</th>
+            <td>{{ employeeName().last }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Komórka organizacyjna</th>
+            <td>{{ c().orgUnitName }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Stanowisko pracy</th>
+            <td>{{ c().position.title }} {{ c().position.code }}</td>
+          </tr>
+          @if (isFirst()) {
             <tr>
-              <th scope="row">{{ row.name }}</th>
-              @for (col of scaleColumns(); track col.points) {
-                <td>{{ row.points === col.points ? '×' : '' }}</td>
-              }
+              <th scope="row">Data nawiązania stosunku pracy</th>
+              <td>{{ c().employee.employment.since | kpDate }}</td>
             </tr>
           }
         </tbody>
       </table>
 
-      @if (periodic(); as r) {
-        <p class="kp-doc__result">
-          Średnia: <strong>{{ r.mean | kpScore }}</strong>
-          · {{ r.level?.label?.toLowerCase() ?? '—' }}
-          / <strong>OCENA {{ outcome() | uppercase }}</strong>
-        </p>
+      <table class="kp-form__table">
+        <caption>{{ isFirst() ? 'Dane bezpośredniego przełożonego' : 'Dane oceniającego' }}</caption>
+        <tbody>
+          <tr>
+            <th scope="row">Imię</th>
+            <td>{{ evaluatorName().first }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Nazwisko</th>
+            <td>{{ evaluatorName().last }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Komórka organizacyjna</th>
+            <td>{{ c().orgUnitName }}</td>
+          </tr>
+          <tr>
+            <th scope="row">Stanowisko pracy</th>
+            <td>{{ c().evaluator.jobTitle || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      @if (isFirst() && headName(); as head) {
+        <table class="kp-form__table">
+          <caption>Dane kierującego komórką organizacyjną</caption>
+          <tbody>
+            <tr>
+              <th scope="row">Imię</th>
+              <td>{{ head.first }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Nazwisko</th>
+              <td>{{ head.last }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Stanowisko pracy</th>
+              <td>{{ c().headOfUnit?.jobTitle || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
       }
-      @if (first(); as r) {
-        <p class="kp-doc__result">
-          Ocena łączna: <strong>{{ r.mean | kpScore }}</strong>
-          · egzamin: {{ examText() }}
-          / <strong>OCENA {{ outcome() | uppercase }}</strong>
-        </p>
-      }
 
-      <h2 class="kp-doc__section">Uzasadnienie</h2>
-      <p class="kp-doc__text">
-        {{ store.redacted() ? '⸻' : c().conclusion.justification || (outcome() === 'pozytywna' ? 'Nie sporządzono (ocena pozytywna).' : '—') }}
-      </p>
-
-      <h2 class="kp-doc__section">{{ isFirst() ? 'Rozwój zawodowy' : 'Wnioski do IPRZ' }}</h2>
-      <p class="kp-doc__text">{{ store.redacted() ? '⸻' : c().conclusion.developmentPlan || '—' }}</p>
-
-      <div class="kp-doc__signs">
-        <div><span>{{ c().conclusion.draftedAt | kpDate }}</span>podpis oceniającego</div>
-        <div><span>{{ c().conclusion.employeeAcknowledgedAt | kpDate }}</span>zapoznanie ocenianego</div>
-      </div>
-    </article>
-  </div>
-
-  <aside class="kp-preview__aside kp-no-print" aria-label="Status dokumentu">
-    <section class="kp-aside-card">
-      <h2 class="kp-aside-card__title">Zapoznanie ocenianej</h2>
-      @if (c().conclusion.employeeAcknowledgedAt; as ack) {
-        <p class="kp-aside-card__ok"><kp-icon name="check-circle" [size]="16" /> {{ c().employee.fullName }} · {{ ack | kpDate }}</p>
-        @if (objectionUntil(); as until) {
-          <p class="kp-muted kp-text-sm">Sprzeciw do {{ until | kpDate }}</p>
-        }
+      @if (isFirst()) {
+        <table class="kp-form__table">
+          <caption>Rozmowa wstępna</caption>
+          <tbody>
+            <tr>
+              <th scope="row">Data rozmowy wstępnej</th>
+              <td>{{ c().preliminary.meetingDate | kpDate }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Termin sprawozdania</th>
+              <td>{{ c().preliminary.reportWindow?.from | kpDate }} – {{ c().preliminary.reportWindow?.to | kpDate }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Okres pierwszej oceny</th>
+              <td>{{ c().preliminary.assessmentWindow?.from | kpDate }} – {{ c().preliminary.assessmentWindow?.to | kpDate }}</td>
+            </tr>
+          </tbody>
+        </table>
       } @else {
-        <p class="kp-muted kp-text-sm">Jeszcze nie odnotowano zapoznania.</p>
+        <table class="kp-form__criteria">
+          <caption>Kryteria oceny i termin sporządzenia oceny</caption>
+          <thead>
+            <tr>
+              <th scope="col">Kryteria obowiązkowe</th>
+              <th scope="col">Kryteria dodatkowe wybrane przez oceniającego (nie więcej niż 3)</th>
+              <th scope="col">Termin sporządzenia oceny</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <ol>
+                  @for (row of mandatoryRows(); track row.id) {
+                    <li>{{ row.name }}</li>
+                  }
+                </ol>
+              </td>
+              <td>
+                @if (additionalRows().length) {
+                  <ol>
+                    @for (row of additionalRows(); track row.id) {
+                      <li>{{ row.name }}</li>
+                    }
+                  </ol>
+                } @else {
+                  <span class="kp-form__blank">—</span>
+                }
+              </td>
+              <td class="kp-form__center">{{ c().preliminary.assessmentDueDate | kpDate }}</td>
+            </tr>
+          </tbody>
+        </table>
       }
-    </section>
 
-    <section class="kp-aside-card">
-      <h2 class="kp-aside-card__title">Historia dokumentów</h2>
-      <ol class="kp-aside-card__list">
-        @for (event of recentHistory(); track event.id) {
-          <li>
-            <span>{{ event.at | kpDate }}</span>
-            {{ event.summary }}
-          </li>
-        } @empty {
-          <li class="kp-muted">Brak zdarzeń</li>
+      @if (isFirst()) {
+        <table class="kp-form__table">
+          <caption>Kryteria oceny</caption>
+          <tbody>
+            @for (row of rows(); track row.id) {
+              <tr>
+                <th scope="row">{{ row.no }}.</th>
+                <td>
+                  {{ row.name }}
+                  @if (row.expectation) {
+                    <div class="kp-form__hint">{{ row.expectation }}</div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      <div class="kp-form__confirm">
+        @if (isFirst()) {
+          <p>
+            Potwierdzamy przeprowadzenie rozmowy wstępnej oraz wyznaczenie terminu na złożenie sprawozdania i zapoznanie z nim
+            ocenianego.
+          </p>
+        } @else {
+          <p><strong>Potwierdzamy:</strong></p>
+          <ul>
+            <li>
+              przeprowadzenie rozmowy, o której mowa w § 5 ust. 1 rozporządzenia Prezesa Rady Ministrów z dnia 4 kwietnia 2016 r.
+              w sprawie warunków i sposobu przeprowadzania ocen okresowych urzędników służby cywilnej i pracowników służby cywilnej
+              (Dz. U. poz. 470), i omówienie w trakcie tej rozmowy wszystkich wymaganych zagadnień,
+            </li>
+            <li>zapoznanie ocenianego z kryteriami oceny oraz terminem sporządzenia oceny.</li>
+          </ul>
         }
-      </ol>
+
+        <div class="kp-form__signs">
+          <div class="kp-form__sign">
+            <span class="kp-form__line">{{ c().preliminary.meetingDate | kpDate }}</span>
+            <span>data</span>
+            <span class="kp-form__line"></span>
+            <span>podpis oceniającego</span>
+          </div>
+          <div class="kp-form__sign">
+            <span class="kp-form__line">{{ c().preliminary.employeeAcknowledgedAt | kpDate }}</span>
+            <span>data</span>
+            <span class="kp-form__line"></span>
+            <span>podpis ocenianego</span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    @if (!showPartThree()) {
-      <section class="kp-aside-card kp-aside-card--muted">
-        <h2 class="kp-aside-card__title">Część III nie dotyczy</h2>
-        <p class="kp-muted kp-text-sm">
-          @if (isFirst()) {
-            Część III dotyczy wyłącznie urzędników służby cywilnej w ocenie okresowej.
-          } @else {
-            Oceniana osoba nie jest urzędnikiem służby cywilnej — wniosek o stopień nie występuje.
+    <!-- ========== CZĘŚĆ II ========== -->
+    <section class="kp-form__part kp-print-page-break" aria-label="Część II">
+      <h3 class="kp-form__part-title">{{ isFirst() ? 'Ocena' : 'Część II' }}</h3>
+
+      <table class="kp-form__table">
+        <caption>Dane rozmowy oceniającej</caption>
+        <tbody>
+          <tr>
+            <th scope="row">Data przeprowadzenia rozmowy oceniającej</th>
+            <td>{{ c().review.meetingDate | kpDate }}</td>
+          </tr>
+          @if (!isFirst()) {
+            <tr>
+              <th scope="row">Okres, w którym oceniany podlegał ocenie — OD</th>
+              <td>{{ c().preliminary.employeeAcknowledgedAt | kpDate }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Okres, w którym oceniany podlegał ocenie — DO</th>
+              <td>{{ c().conclusion.draftedAt | kpDate }}</td>
+            </tr>
           }
-        </p>
-      </section>
-    } @else {
-      <section class="kp-aside-card">
-        <h2 class="kp-aside-card__title">Część III</h2>
-        <p class="kp-text-sm">
-          @switch (c().conclusion.promotionRequest) {
-            @case ('tak') { Wnioskuję o kolejny stopień. {{ c().conclusion.promotionJustification }} }
-            @case ('nie') { Nie wnioskuję o kolejny stopień. }
-            @default { Brak decyzji. }
+        </tbody>
+      </table>
+
+      @if (isFirst()) {
+        <table class="kp-form__scores">
+          <caption>Kryteria oceny — ocena cząstkowa</caption>
+          <thead>
+            <tr>
+              <th scope="col" rowspan="2">Kryterium</th>
+              @for (col of scaleColumns(); track col.points) {
+                <th scope="col">{{ col.label }}</th>
+              }
+            </tr>
+            <tr>
+              @for (col of scaleColumns(); track col.points) {
+                <th scope="col">{{ col.points }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track row.id) {
+              <tr>
+                <th scope="row">{{ row.name }}</th>
+                @for (col of scaleColumns(); track col.points) {
+                  <td>{{ row.points === col.points ? 'X' : '' }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <table class="kp-form__scores">
+          <caption>Kryteria obowiązkowe — ocena cząstkowa</caption>
+          <thead>
+            <tr>
+              <th scope="col" rowspan="2">Kryterium</th>
+              @for (col of scaleColumns(); track col.points) {
+                <th scope="col">{{ col.label }}</th>
+              }
+            </tr>
+            <tr>
+              @for (col of scaleColumns(); track col.points) {
+                <th scope="col">{{ col.points }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of mandatoryRows(); track row.id) {
+              <tr>
+                <th scope="row">{{ row.name }}</th>
+                @for (col of scaleColumns(); track col.points) {
+                  <td>{{ row.points === col.points ? 'X' : '' }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        @if (additionalRows().length) {
+          <table class="kp-form__scores">
+            <caption>Kryteria dodatkowe wybrane przez oceniającego — ocena cząstkowa</caption>
+            <thead>
+              <tr>
+                <th scope="col" rowspan="2">Kryterium</th>
+                @for (col of scaleColumns(); track col.points) {
+                  <th scope="col">{{ col.label }}</th>
+                }
+              </tr>
+              <tr>
+                @for (col of scaleColumns(); track col.points) {
+                  <th scope="col">{{ col.points }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of additionalRows(); track row.id) {
+                <tr>
+                  <th scope="row">{{ row.name }}</th>
+                  @for (col of scaleColumns(); track col.points) {
+                    <td>{{ row.points === col.points ? 'X' : '' }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      }
+
+      <table class="kp-form__table">
+        <caption>Przyznanie oceny</caption>
+        <tbody>
+          @if (periodic(); as r) {
+            <tr>
+              <th scope="row">Średnia arytmetyczna z ocen cząstkowych</th>
+              <td>{{ r.mean | kpScore }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Ogólny poziom spełnienia kryteriów oceny</th>
+              <td>{{ r.level?.label ?? '—' }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Ocena okresowa w służbie cywilnej</th>
+              <td class="kp-form__outcome-cells">
+                <span [class.kp-form__mark]="outcome() === 'pozytywna'">{{ outcome() === 'pozytywna' ? 'X' : '' }} POZYTYWNA</span>
+                <span [class.kp-form__mark]="outcome() === 'negatywna'">{{ outcome() === 'negatywna' ? 'X' : '' }} NEGATYWNA</span>
+              </td>
+            </tr>
           }
+          @if (first(); as r) {
+            <tr>
+              <th scope="row">Ocena łączna</th>
+              <td>{{ r.mean | kpScore }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Egzamin ze służby przygotowawczej</th>
+              <td>{{ examText() }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Pierwsza ocena w służbie cywilnej</th>
+              <td class="kp-form__outcome-cells">
+                <span [class.kp-form__mark]="outcome() === 'pozytywna'">{{ outcome() === 'pozytywna' ? 'X' : '' }} POZYTYWNA</span>
+                <span [class.kp-form__mark]="outcome() === 'negatywna'">{{ outcome() === 'negatywna' ? 'X' : '' }} NEGATYWNA</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <table class="kp-form__table kp-form__table--block">
+        <caption>Uzasadnienie przyznanej oceny</caption>
+        <tbody>
+          <tr>
+            <td class="kp-form__block">
+              {{ sheetInFile() ? (c().conclusion.justification || (outcome() === 'pozytywna' ? 'Nie sporządzono (ocena pozytywna).' : '—')) : '⸻' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="kp-form__table kp-form__table--block">
+        <caption>
+          {{ isFirst() ? 'Wnioski dotyczące rozwoju zawodowego' : 'Wnioski dotyczące indywidualnego programu rozwoju zawodowego' }}
+        </caption>
+        <tbody>
+          <tr>
+            <td class="kp-form__block">
+              {{ sheetInFile() ? (c().conclusion.developmentPlan || '—') : '⸻' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      @if (!isFirst()) {
+        <table class="kp-form__table">
+          <caption>Dane dotyczące poprzedniej oceny okresowej</caption>
+          <tbody>
+            <tr>
+              <th scope="row">Ocena</th>
+              <td>{{ c().employee.previousAssessment?.outcome === 'pozytywna' ? 'pozytywna' : c().employee.previousAssessment?.outcome === 'negatywna' ? 'negatywna' : '—' }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Poziom</th>
+              <td>{{ previousLevelLabel() }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Data sporządzenia</th>
+              <td>{{ c().employee.previousAssessment?.draftedAt | kpDate }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table class="kp-form__table">
+          <caption>Czy do oceny okresowej dołączono wniosek o przyznanie kolejnego stopnia służbowego?</caption>
+          <tbody>
+            <tr>
+              <td class="kp-form__outcome-cells">
+                <span [class.kp-form__mark]="sheetInFile() && c().conclusion.promotionRequest === 'tak'">{{ sheetInFile() && c().conclusion.promotionRequest === 'tak' ? 'X' : '' }} TAK</span>
+                <span [class.kp-form__mark]="sheetInFile() && c().conclusion.promotionRequest === 'nie'">{{ sheetInFile() && c().conclusion.promotionRequest === 'nie' ? 'X' : '' }} NIE</span>
+                <span [class.kp-form__mark]="c().employee.status !== 'urzednik-sc' || c().conclusion.promotionRequest === 'nie-dotyczy'">
+                  {{ c().employee.status !== 'urzednik-sc' || c().conclusion.promotionRequest === 'nie-dotyczy' ? 'X' : '' }}
+                  NIE DOTYCZY (oceniany jest pracownikiem służby cywilnej)
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      }
+
+      <div class="kp-form__confirm">
+        <div class="kp-form__signs">
+          <div class="kp-form__sign">
+            <span class="kp-form__line">{{ c().conclusion.draftedAt | kpDate }}</span>
+            <span>data</span>
+            <span class="kp-form__line">{{ c().evaluator.fullName }}</span>
+            <span>podpis oceniającego</span>
+          </div>
+          <div class="kp-form__sign">
+            <span class="kp-form__line">{{ c().conclusion.employeeAcknowledgedAt | kpDate }}</span>
+            <span>data</span>
+            <span class="kp-form__line">{{ c().employee.fullName }}</span>
+            <span>podpis ocenianego / zapoznanie</span>
+          </div>
+        </div>
+        @if (!isFirst()) {
+          <p class="kp-form__pouczenie">
+            <strong>Pouczenie.</strong>
+            Zgodnie z art. 83 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej od oceny okresowej służy, w terminie
+            7 dni od dnia zapoznania się z oceną, sprzeciw do dyrektora generalnego urzędu.
+          </p>
+        }
+      </div>
+    </section>
+
+    <!-- ========== CZĘŚĆ III ========== -->
+    @if (showPartThree()) {
+      <section class="kp-form__part kp-print-page-break" aria-label="Część III">
+        <h3 class="kp-form__part-title">Część III</h3>
+        <p class="kp-form__note">
+          Wniosek jest wypełniany i dołączany do arkusza oceny okresowej ocenianego tylko w sytuacji skorzystania przez oceniającego
+          z możliwości przewidzianej w art. 89 ust. 1 ustawy z dnia 21 listopada 2008 r. o służbie cywilnej.
         </p>
+
+        <table class="kp-form__table">
+          <caption>Dane urzędnika służby cywilnej</caption>
+          <tbody>
+            <tr>
+              <th scope="row">Imię</th>
+              <td>{{ employeeName().first }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Nazwisko</th>
+              <td>{{ employeeName().last }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Rok mianowania</th>
+              <td>{{ c().employee.civilServant?.appointedYear ?? '—' }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Posiadany stopień służbowy</th>
+              <td>{{ c().employee.civilServant?.grade ?? '—' }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Data przyznania stopnia służbowego</th>
+              <td>{{ c().employee.civilServant?.gradeGrantedAt | kpDate }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table class="kp-form__table kp-form__table--block">
+          <caption>Wniosek o przyznanie kolejnego stopnia służbowego</caption>
+          <tbody>
+            <tr>
+              <td class="kp-form__block">
+                W związku z uzyskaniem przez Panią/Pana
+                <strong>{{ c().employee.fullName }}</strong>
+                pozytywnej oceny okresowej, na podstawie art. 89 ust. 1 ustawy o służbie cywilnej wnioskuję o przyznanie kolejnego
+                stopnia służbowego.
+                <br /><br />
+                <strong>Umotywowanie wniosku</strong><br />
+                {{ sheetInFile() ? (c().conclusion.promotionJustification || '—') : '⸻' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
     }
-  </aside>
+  </article>
 </div>
 
+<aside class="kp-preview__meta kp-no-print" aria-label="Status dokumentu">
+  <section class="kp-aside-card">
+    <h2 class="kp-aside-card__title">Zapoznanie ocenianej osoby</h2>
+    @if (c().conclusion.employeeAcknowledgedAt; as ack) {
+      <p class="kp-aside-card__ok"><kp-icon name="check-circle" [size]="16" /> {{ c().employee.fullName }} · {{ ack | kpDate }}</p>
+      @if (objectionUntil(); as until) {
+        <p class="kp-muted kp-text-sm">Sprzeciw do {{ until | kpDate }}</p>
+      }
+    } @else {
+      <p class="kp-muted kp-text-sm">Jeszcze nie odnotowano zapoznania.</p>
+    }
+  </section>
+
+  @if (partThreeNote(); as note) {
+    <section class="kp-aside-card kp-aside-card--muted">
+      <h2 class="kp-aside-card__title">Część III</h2>
+      <p class="kp-muted kp-text-sm">{{ note }}</p>
+    </section>
+  }
+
+  <section class="kp-aside-card">
+    <h2 class="kp-aside-card__title">Ostatnie zdarzenia</h2>
+    <ol class="kp-aside-card__list">
+      @for (event of recentHistory(); track event.id) {
+        <li>
+          <span>{{ event.at | kpDate }}</span>
+          {{ event.summary }}
+        </li>
+      } @empty {
+        <li class="kp-muted">Brak zdarzeń</li>
+      }
+    </ol>
+  </section>
+</aside>
+
 <div class="kp-preview__actions kp-no-print">
-  <a kpButton="secondary" icon="arrow-left" [routerLink]="[store.baseUrl(), 'podsumowanie']">Wróć do podsumowania</a>
+  <a kpButton="secondary" icon="arrow-left" [routerLink]="formLink()">Wróć do formularza</a>
   <a kpButton="ghost" icon="history" [routerLink]="[store.baseUrl(), 'historia']">Zobacz historię</a>
 </div>

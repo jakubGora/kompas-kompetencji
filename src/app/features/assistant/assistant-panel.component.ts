@@ -5,6 +5,7 @@ import {
   Injector,
   afterNextRender,
   computed,
+  effect,
   inject,
   input,
   output,
@@ -24,18 +25,11 @@ import type {
 import { toApiError } from '@core/http/api-error';
 import { DialogService } from '@shared/ui/dialog/dialog.service';
 import { IconComponent } from '@shared/ui/icon/icon.component';
-import { ToastService } from '@shared/ui/toast/toast.service';
 import { firstValueFrom } from 'rxjs';
-import { LocalDictation } from './local-dictation';
+import { AssistantChatStore, type StoredAssistantMessage } from './assistant-chat.store';
 import { SourceDrawerComponent, type SourceDrawerData } from './source-drawer.component';
 
-interface Message {
-  readonly id: number;
-  readonly question: string;
-  readonly mode: AssistantMode;
-  readonly answer?: AssistantAnswer;
-  readonly error?: string;
-}
+type Message = StoredAssistantMessage;
 
 const STATUS: Readonly<Record<AnswerStatus, string>> = {
   odpowiedz: 'Odpowiedź ze źródeł',
@@ -44,7 +38,8 @@ const STATUS: Readonly<Record<AnswerStatus, string>> = {
 };
 
 const MAX_LENGTH = 500;
-const HISTORY_TURNS = 3;
+/** Wymiany → role user/assistant; BE bierze do ~10 wiadomości. */
+const HISTORY_TURNS = 5;
 let instances = 0;
 
 @Component({
@@ -57,10 +52,9 @@ let instances = 0;
 })
 export class AssistantPanelComponent {
   private readonly api = inject(KnowledgeApi);
+  private readonly chats = inject(AssistantChatStore);
   private readonly dialogs = inject(DialogService);
-  private readonly toast = inject(ToastService);
   private readonly injector = inject(Injector);
-  protected readonly dictation = inject(LocalDictation);
 
   readonly context = input<AssistantContext>({});
   /** Opis kontekstu pod nagłówkiem, np. „Anna Nowak · Ocena kryteriów”. */
@@ -78,6 +72,7 @@ export class AssistantPanelComponent {
   protected readonly maxLength = MAX_LENGTH;
   protected readonly uid = `kp-assistant-${++instances}`;
   private nextId = 0;
+  private activeCaseId: string | null = null;
 
   private readonly log = viewChild<ElementRef<HTMLElement>>('log');
 
@@ -89,6 +84,23 @@ export class AssistantPanelComponent {
   protected readonly suggestions = computed(() =>
     this.suggestionsResource.hasValue() ? this.suggestionsResource.value().slice(0, 4) : [],
   );
+
+  constructor() {
+    effect(() => {
+      const caseId = this.context().caseId ?? null;
+      if (caseId === this.activeCaseId) return;
+      this.activeCaseId = caseId;
+      if (!caseId) {
+        this.messages.set([]);
+        this.nextId = 0;
+        return;
+      }
+      const stored = this.chats.load(caseId);
+      this.messages.set(stored);
+      this.nextId = stored.reduce((max, message) => Math.max(max, message.id), 0);
+      if (stored.length > 0) this.scrollToEnd();
+    });
+  }
 
   protected setMode(mode: AssistantMode): void {
     this.mode.set(mode);
@@ -120,22 +132,8 @@ export class AssistantPanelComponent {
     } catch (error) {
       this.replace(id, { error: toApiError(error).message });
     }
+    this.persist();
     this.scrollToEnd();
-  }
-
-  protected toggleDictation(): void {
-    if (this.dictation.support() === 'unavailable') {
-      this.toast.info(
-        'Dyktowanie niedostępne',
-        'Kompas używa tylko rozpoznawania mowy na urządzeniu — ta przeglądarka wysłałaby nagranie do chmury.',
-      );
-      return;
-    }
-    if (this.dictation.listening()) {
-      this.dictation.stop();
-      return;
-    }
-    this.dictation.start((text) => this.draft.update((current) => `${current ? `${current} ` : ''}${text}`.slice(0, MAX_LENGTH)));
   }
 
   protected openCitation(citation: Citation): void {
@@ -148,6 +146,8 @@ export class AssistantPanelComponent {
 
   protected clear(): void {
     this.messages.set([]);
+    const caseId = this.activeCaseId;
+    if (caseId) this.chats.clear(caseId);
   }
 
   private history(): AssistantTurn[] {
@@ -162,6 +162,12 @@ export class AssistantPanelComponent {
 
   private replace(id: number, change: Partial<Message>): void {
     this.messages.update((items) => items.map((item) => (item.id === id ? { ...item, ...change } : item)));
+  }
+
+  private persist(): void {
+    const caseId = this.activeCaseId;
+    if (!caseId) return;
+    this.chats.save(caseId, this.messages());
   }
 
   private scrollToEnd(): void {

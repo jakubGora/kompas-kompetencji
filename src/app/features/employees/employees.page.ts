@@ -19,6 +19,7 @@ import { IconComponent } from '@shared/ui/icon/icon.component';
 import { PageHeaderComponent } from '@shared/ui/page-header/page-header.component';
 import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { ToastService } from '@shared/ui/toast/toast.service';
+import { CreateEmployeeDialogComponent } from './create-employee-dialog.component';
 import { StartCaseDialogComponent, type StartCaseDialogData } from '../start-case/start-case-dialog.component';
 
 type Scope = 'all' | 'active' | 'idle';
@@ -47,7 +48,9 @@ type Scope = 'all' | 'active' | 'idle';
           ? 'Kartoteka członków korpusu służby cywilnej z terminami kolejnych ocen.'
           : 'Osoby, których jesteś bezpośrednim przełożonym, i terminy ich ocen.'
       "
-    />
+    >
+      <button pageActions type="button" kpButton icon="plus" (click)="create()">Dodaj pracownika</button>
+    </kp-page-header>
 
     @if (employees.isLoading() && !employees.hasValue()) {
       <kp-skeleton height="360px" radius="var(--kp-radius-lg)" />
@@ -233,6 +236,18 @@ export class EmployeesPage {
 
   protected canStart(employee: EmployeeListItem): boolean {
     return this.session.isHr() || employee.supervisor.id === this.session.user()?.id;
+  }
+
+  protected create(): void {
+    const ref = this.dialog.open<EmployeeListItem | undefined, undefined, CreateEmployeeDialogComponent>(
+      CreateEmployeeDialogComponent,
+      { labelledBy: 'kp-create-employee-title' },
+    );
+    ref.closed.subscribe((created) => {
+      if (!created) return;
+      this.toast.success(`Dodano: ${created.fullName}`, 'Możesz uruchomić ocenę z listy pracowników.');
+      this.employees.reload();
+    });
   }
 
   protected start(employee: EmployeeListItem): void {

@@ -21,12 +21,12 @@
     }
   </div>
 } @else if (store.case(); as c) {
-  <kp-page-header class="kp-case__header" [heading]="heading()" [description]="intro()" descriptionTone="default">
-    <div pageActions class="kp-case__aside">
+  @if (c.access.redacted || c.access.role === 'kierujacy' || c.status === 'zakonczona') {
+    <div class="kp-case__notices kp-no-print">
       @if (c.access.redacted) {
         <div class="kp-status-note kp-status-note--warning">
           <p class="kp-status-note__title"><kp-icon name="eye" [size]="14" /> Widok kadr • dane ograniczone</p>
-          <p class="kp-status-note__text">Treść obserwacji i notatek z rozmów zna tylko oceniający.</p>
+          <p class="kp-status-note__text">Obserwacje i notatki zostają u oceniającego. Podpisany arkusz trafia do akt.</p>
         </div>
       } @else if (c.access.role === 'kierujacy') {
         <div class="kp-status-note">
@@ -39,20 +39,65 @@
           <p class="kp-status-note__text">Dane są tylko do odczytu. Dokumenty znajdziesz w historii oceny.</p>
         </div>
       }
-      @if (headerSlot.template(); as aside) {
-        <ng-container [ngTemplateOutlet]="aside" />
-      }
-      <div class="kp-case__links kp-no-print">
-        <a class="kp-text-link kp-text-link--sm kp-text-link--muted" [routerLink]="[store.baseUrl(), 'historia']">Historia i dokumenty</a>
-        <a class="kp-text-link kp-text-link--sm kp-text-link--muted" [routerLink]="[store.baseUrl(), 'arkusz']">Podgląd arkusza</a>
+    </div>
+  }
+
+  <div class="kp-case__banner kp-no-print">
+    <article class="kp-case-subject" aria-label="Oceniany pracownik">
+      <kp-avatar [name]="c.employee.fullName" [size]="72" />
+      <div class="kp-case-subject__text">
+        <p class="kp-case-subject__name">{{ c.employee.fullName }}</p>
+        <p class="kp-case-subject__position">{{ subjectPosition() }}</p>
+        <p class="kp-case-subject__org">{{ subjectOrg() }}</p>
+      </div>
+
+      <div class="kp-case-subject__aside">
+        @if (headerSlot.template(); as aside) {
+          <ng-container [ngTemplateOutlet]="aside" />
+        }
+        <div class="kp-segmented kp-segmented--tint kp-case__views" role="tablist" aria-label="Widok oceny">
+          <a
+            role="tab"
+            class="kp-case__view"
+            [class.kp-case__view--active]="activeView() === 'form'"
+            [attr.aria-selected]="activeView() === 'form'"
+            [routerLink]="formLink()"
+          >
+            Formularz
+          </a>
+          <a
+            role="tab"
+            class="kp-case__view"
+            [class.kp-case__view--active]="activeView() === 'sheet'"
+            [attr.aria-selected]="activeView() === 'sheet'"
+            [routerLink]="[store.baseUrl(), 'arkusz']"
+          >
+            Podgląd
+          </a>
+          <a
+            role="tab"
+            class="kp-case__view"
+            [class.kp-case__view--active]="activeView() === 'history'"
+            [attr.aria-selected]="activeView() === 'history'"
+            [routerLink]="[store.baseUrl(), 'historia']"
+          >
+            Historia
+          </a>
+        </div>
         @if (!assistantDocked()) {
           <button type="button" class="kp-text-link kp-text-link--sm" (click)="openAssistant()">Asystent AI</button>
         }
       </div>
-    </div>
-  </kp-page-header>
+    </article>
+  </div>
 
-  <kp-stepper class="kp-case__stepper kp-no-print" [items]="store.stepperItems()" />
+  @if (activeView() !== 'sheet') {
+    <kp-stepper class="kp-case__stepper kp-no-print" [items]="store.stepperItems()" />
+
+    @if (heading()) {
+      <kp-page-header class="kp-case__header" [heading]="heading()" [description]="intro()" descriptionTone="default" [privacyNote]="false" />
+    }
+  }
 
   <div class="kp-case__body" [class.kp-case__body--docked]="assistantDocked()">
     <div class="kp-case__main">

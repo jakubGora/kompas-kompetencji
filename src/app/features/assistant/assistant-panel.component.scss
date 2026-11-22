@@ -285,39 +285,6 @@
   }
 }
 
-.kp-assistant__mic {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--kp-color-primary);
-  cursor: pointer;
-
-  &[aria-disabled='true'] {
-    opacity: 0.55;
-    cursor: help;
-  }
-
-  &--active {
-    background: var(--kp-color-surface-tint-strong);
-    animation: kp-assistant-pulse 1.2s infinite ease-in-out;
-  }
-
-  &:focus-visible {
-    @include m.focus-ring;
-  }
-}
-
-@keyframes kp-assistant-pulse {
-  50% {
-    box-shadow: 0 0 0 4px var(--kp-color-surface-tint-strong);
-  }
-}
 
 .kp-assistant__send {
   display: grid;

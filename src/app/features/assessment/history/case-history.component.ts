@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import type { CaseDocument, HistoryKind } from '@core/domain/assessment.model';
+import type { CaseDocument, HistoryEvent, HistoryKind } from '@core/domain/assessment.model';
+import { historySummaryForHr } from '@core/domain/hr-view';
 import { KpDatePipe } from '@shared/pipes/format.pipes';
 import { BadgeComponent, type Tone } from '@shared/ui/badge/badge.component';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
@@ -37,7 +38,13 @@ const DOC_STATUS: Readonly<Record<CaseDocument['status'], { readonly label: stri
           <div>
             <p class="kp-eyebrow">Ślad audytowy</p>
             <h2 class="kp-card__title" id="kp-timeline-title">Historia oceny</h2>
-            <p class="kp-card__subtitle">Kto, kiedy i co zmienił — w tym odstępstwa od sugestii narzędzia.</p>
+            <p class="kp-card__subtitle">
+              @if (store.redacted()) {
+                Przebieg procesu. Tytuły obserwacji i uzasadnienia odstępstw zostają u oceniającego.
+              } @else {
+                Kto, kiedy i co zmienił — w tym odstępstwa od sugestii narzędzia.
+              }
+            </p>
           </div>
         </div>
         @if (events().length === 0) {
@@ -48,7 +55,7 @@ const DOC_STATUS: Readonly<Record<CaseDocument['status'], { readonly label: stri
               <li class="kp-timeline__item" [attr.data-kind]="event.kind">
                 <span class="kp-timeline__icon" aria-hidden="true"><kp-icon [name]="kind[event.kind].icon" [size]="16" /></span>
                 <div class="kp-timeline__body">
-                  <p class="kp-timeline__summary">{{ event.summary }}</p>
+                  <p class="kp-timeline__summary">{{ summary(event) }}</p>
                   <p class="kp-timeline__meta">
                     {{ event.at | kpDate: 'datetime' }} · {{ event.actor.fullName }}
                     @if (event.stepId) {
@@ -211,6 +218,10 @@ export class CaseHistoryComponent {
 
   protected readonly events = computed(() => [...(this.store.case()?.history ?? [])].reverse());
   protected readonly documents = computed(() => this.store.case()?.documents ?? []);
+
+  protected summary(event: HistoryEvent): string {
+    return this.store.redacted() ? historySummaryForHr(event) : event.summary;
+  }
 
   constructor() {
     void this.store.refresh();

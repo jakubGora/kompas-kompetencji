@@ -17,10 +17,6 @@ export class SessionApi {
     return this.http.get<DemoInfo>(`${this.base}/demo`);
   }
 
-  loadScenario(scenarioId: string): Observable<{ landing: string }> {
-    return this.http.post<{ landing: string }>(`${this.base}/demo/scenario`, { scenarioId });
-  }
-
   reset(): Observable<{ landing: string }> {
     return this.http.post<{ landing: string }>(`${this.base}/demo/reset`, {});
   }

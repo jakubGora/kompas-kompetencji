@@ -26,8 +26,8 @@
   </nav>
 
   @if (store.redacted()) {
-    <kp-callout tone="neutral" icon="lock" heading="Zaznaczenia zachowań i uzasadnienia widzi tylko oceniający">
-      W widoku kadr widać wyłącznie, czy ocena cząstkowa została ustalona.
+    <kp-callout tone="neutral" icon="lock" heading="Zaznaczenia zachowań zostają u oceniającego">
+      Widać oceny cząstkowe w punktach. Opisy zachowań i uzasadnienia odstępstw są materiałem roboczym.
     </kp-callout>
   } @else {
     <div class="kp-rating">
@@ -72,8 +72,6 @@
                 [number]="i + 1"
                 [observations]="observations()"
                 [editable]="editable()"
-                [path]="c().path"
-                [suggestion]="suggestion()"
                 (changed)="onIndicator($event)"
               />
             } @empty {

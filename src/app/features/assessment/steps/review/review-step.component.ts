@@ -110,14 +110,9 @@ export class ReviewStepComponent {
 
   protected async downloadCard(): Promise<void> {
     if (!this.plan()) {
-      await this.prepare();
+      const plan = await this.store.conversationPlan();
+      if (!plan) return;
     }
-    const error = await this.store.generateDocument('plan-rozmowy');
-    if (error) {
-      this.toast.error('Nie udało się przygotować karty', error.message);
-      return;
-    }
-    this.toast.success('Karta rozmowy gotowa', 'Możesz ją wydrukować albo zapisać jako PDF.');
     window.print();
   }
 

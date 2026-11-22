@@ -70,7 +70,7 @@ export default [
       },
       {
         path: 'arkusz',
-        data: { view: 'Arkusz oceny', intro: 'Podgląd dokumentu w układzie do druku. Sprawdź treść, zanim przekażesz arkusz pracownikowi.' },
+        data: { view: 'Arkusz oceny', intro: 'Podgląd arkusza w układzie A4 — ten sam dokument do druku i PDF.' },
         loadComponent: () => import('./documents/sheet-preview.component').then((m) => m.SheetPreviewComponent),
       },
       {

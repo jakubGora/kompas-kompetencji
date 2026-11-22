@@ -1,6 +1,5 @@
 @use 'mixins' as m;
 
-// Projekt: nagłówek → pasek kroków (21 px niżej) → obszar pracy 988 px + asystent 312 px (57 px pod etykietami).
 :host {
   display: flex;
   flex: 1;
@@ -8,29 +7,110 @@
   min-width: 0;
 }
 
-.kp-case__header {
-  margin-bottom: 21px;
-}
-
-.kp-case__aside {
+.kp-case__notices {
   display: grid;
-  justify-items: end;
   gap: var(--kp-space-2);
-  max-width: 520px;
+  margin-bottom: var(--kp-space-4);
 }
 
-.kp-case__links {
+.kp-case__banner {
+  margin-bottom: var(--kp-space-5);
+}
+
+.kp-case-subject {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--kp-space-1) var(--kp-space-4);
+  align-items: center;
+  gap: var(--kp-space-5) var(--kp-space-6);
+  min-width: 0;
+  min-height: 8.625rem;
+  padding: var(--kp-space-5) var(--kp-space-6);
+  border: 1px solid var(--kp-color-border-subtle);
+  border-radius: var(--kp-radius-lg);
+  background: var(--kp-color-surface);
+  box-shadow: var(--kp-shadow-sm);
+}
+
+.kp-case-subject__text {
+  display: grid;
+  flex: 1 1 16rem;
+  gap: 4px;
+  min-width: 0;
+}
+
+.kp-case-subject__name {
+  margin: 0;
+  color: var(--kp-color-text);
+  font-size: var(--kp-font-size-xl);
+  font-weight: var(--kp-font-weight-semibold);
+  line-height: 1.25;
+}
+
+.kp-case-subject__position,
+.kp-case-subject__org {
+  margin: 0;
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-xs);
+  line-height: 1.45;
+}
+
+.kp-case-subject__org {
+  max-width: 36rem;
+}
+
+.kp-case-subject__aside {
+  display: grid;
+  justify-items: end;
+  align-content: center;
+  gap: var(--kp-space-3);
+  margin-left: auto;
+}
+
+.kp-case__views {
+  display: inline-flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--kp-radius-md);
+  background: var(--kp-color-surface-tint);
+}
+
+.kp-case__view {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 var(--kp-space-3);
+  border-radius: var(--kp-radius-sm);
+  color: var(--kp-color-text-muted);
+  font-size: var(--kp-font-size-2xs);
+  font-weight: var(--kp-font-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  @include m.interactive-transition(background-color, color);
+
+  &:hover {
+    color: var(--kp-color-text);
+  }
+
+  &--active {
+    background: var(--kp-color-surface-tint-strong);
+    color: var(--kp-color-text);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kp-focus-outline-color);
+    outline-offset: 2px;
+  }
+}
+
+.kp-case__header {
+  margin-bottom: var(--kp-space-5);
 }
 
 .kp-case__stepper {
-  margin-bottom: 55px;
+  margin-bottom: var(--kp-space-6);
 }
 
-// Dolny odstęp strony daje pasek akcji kroku (przyklejony do dołu), więc obszar pracy wchodzi w padding powłoki.
 .kp-case__body {
   display: grid;
   flex: 1;
@@ -57,22 +137,17 @@
 }
 
 @include m.down(md) {
-  .kp-case__aside {
+  .kp-case-subject__aside {
+    width: 100%;
+    margin-left: 0;
     justify-items: start;
-  }
-
-  .kp-case__links {
-    justify-content: flex-start;
-  }
-
-  .kp-case__stepper {
-    margin-bottom: var(--kp-space-8);
   }
 }
 
 @media print {
-  .kp-case__header,
-  .kp-case__stepper {
+  .kp-case__banner,
+  .kp-case__stepper,
+  .kp-case__header {
     display: none;
   }
 

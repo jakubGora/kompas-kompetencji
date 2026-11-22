@@ -421,7 +421,7 @@ function zofiaCase(): StoredCase {
     employee: zofia,
     position: position(zofia.positionId),
     evaluator: piotr,
-    headOfUnit: user('u-adam'),
+    headOfUnit: piotr,
     orgUnitName: orgUnitName(zofia),
     createdAt: ts('2026-03-03', '08:30'),
     createdBy: user('u-marta'),
@@ -505,134 +505,6 @@ function zofiaCase(): StoredCase {
   };
 }
 
-// — Jan Kowalski (Ewa Mazur): rozmowa wstępna do 27.11.2026 —
-
-function janCase(): StoredCase {
-  const mazur = user('u-ewa-mazur');
-  const jan = employee('e-jan');
-  const pos = position(jan.positionId);
-  const base = createCase({
-    id: 'case-jan',
-    path: 'periodic',
-    employee: jan,
-    position: pos,
-    evaluator: mazur,
-    orgUnitName: orgUnitName(jan),
-    createdAt: ts('2026-11-02', '09:00'),
-    createdBy: user('u-marta'),
-  });
-  return {
-    ...base,
-    updatedAt: ts('2026-11-12', '12:10'),
-    steps: completed('periodic', 'rozmowa-wstepna', { stanowisko: ts('2026-11-12', '11:50'), kryteria: ts('2026-11-12', '12:10') }, mazur.id),
-    positionReview: { analysis: analyzePosition(pos, ts('2026-11-12', '11:45')), confirmedVariant: 'C', confirmedAt: ts('2026-11-12', '11:50') },
-    criteria: { additional: ['c07', 'c05'], rejectedSuggestions: [], approvedAt: ts('2026-11-12', '12:10') },
-    history: [
-      ...base.history,
-      historyEvent(ts('2026-11-12', '11:50'), mazur, 'krok', 'Potwierdzono arkusz C.', 'stanowisko'),
-      historyEvent(ts('2026-11-12', '12:10'), mazur, 'krok', 'Zatwierdzono kryteria dodatkowe: myślenie analityczne, kreatywność.', 'kryteria'),
-    ],
-  };
-}
-
-// — Paweł Wróbel (Karolina Sowa): arkusz B, wybór kryteriów —
-
-function pawelCase(): StoredCase {
-  const sowa = user('u-karolina');
-  const pawel = employee('e-pawel');
-  const pos = position(pawel.positionId);
-  const base = createCase({
-    id: 'case-pawel',
-    path: 'periodic',
-    employee: pawel,
-    position: pos,
-    evaluator: sowa,
-    orgUnitName: orgUnitName(pawel),
-    createdAt: ts('2026-11-04', '09:00'),
-    createdBy: user('u-marta'),
-  });
-  return {
-    ...base,
-    updatedAt: ts('2026-11-10', '10:20'),
-    steps: completed('periodic', 'kryteria', { stanowisko: ts('2026-11-10', '10:20') }, sowa.id),
-    positionReview: { analysis: analyzePosition(pos, ts('2026-11-10', '10:15')), confirmedVariant: 'B', confirmedAt: ts('2026-11-10', '10:20') },
-    history: [...base.history, historyEvent(ts('2026-11-10', '10:20'), sowa, 'krok', 'Potwierdzono arkusz B (kieruje 5–9 pracownikami).', 'stanowisko')],
-  };
-}
-
-// — Katarzyna Wójcik (Tomasz Lis): arkusz wygenerowany, czeka na zapoznanie —
-
-function katarzynaCase(): StoredCase {
-  const lis = user('u-tomasz');
-  const katarzyna = employee('e-katarzyna');
-  const pos = position(katarzyna.positionId);
-  const base = createCase({
-    id: 'case-katarzyna',
-    path: 'periodic',
-    employee: katarzyna,
-    position: pos,
-    evaluator: lis,
-    orgUnitName: orgUnitName(katarzyna),
-    createdAt: ts('2024-11-25', '09:00'),
-    createdBy: user('u-marta'),
-  });
-  const criteria: CriterionId[] = [...MANDATORY_CRITERIA.C, 'c10', 'c05'];
-  const points: ScorePoints[] = [7, 7, 7, 7, 5, 7, 7];
-  return {
-    ...base,
-    updatedAt: ts('2026-11-19', '14:10'),
-    steps: completed(
-      'periodic',
-      'podsumowanie',
-      {
-        stanowisko: ts('2024-12-02', '10:00'),
-        kryteria: ts('2024-12-02', '10:20'),
-        'rozmowa-wstepna': ts('2024-12-10', '12:00'),
-        obserwacje: ts('2026-11-12', '09:00'),
-        'rozmowa-oceniajaca': ts('2026-11-17', '13:00'),
-        ocena: ts('2026-11-19', '13:40'),
-      },
-      lis.id,
-    ),
-    positionReview: { analysis: analyzePosition(pos, ts('2024-12-02', '09:55')), confirmedVariant: 'C', confirmedAt: ts('2024-12-02', '10:00') },
-    criteria: { additional: ['c10', 'c05'], rejectedSuggestions: [], approvedAt: ts('2024-12-02', '10:20') },
-    preliminary: {
-      meetingDate: '2024-12-10',
-      topics: allTopics(['obowiazki', 'kryteria', 'oczekiwania', 'cele'], { cele: 'nie-dotyczy' }),
-      expectations: criteria.map((criterionId) => ({ criterionId, text: 'Zgodnie ze standardem „na poziomie oczekiwań” w modelu kompetencji.' })),
-      goals: [],
-      notes: '',
-      assessmentDueDate: '2026-11-20',
-      employeeAcknowledgedAt: '2024-12-10',
-    },
-    review: {
-      meetingDate: '2026-11-17',
-      topics: allTopics(['obowiazki', 'cele', 'rozwoj'], { cele: 'nie-dotyczy' }),
-      notes: 'Omówiono wdrożenie EZD w czterech komórkach i szkolenia dla pracowników.',
-      employeePerspective: 'Chce prowadzić projekt usprawnienia obiegu pism w całym urzędzie.',
-      developmentNeeds: 'Zarządzanie projektem, warsztaty z facylitacji.',
-    },
-    ratings: criteria.map((criterionId, index) =>
-      rating('periodic', criterionId, { decision: { points: points[index], at: ts('2026-11-19', '13:30') } }, lis.id),
-    ),
-    conclusion: {
-      justification:
-        'Oceniana skutecznie koordynowała wdrożenie elektronicznego zarządzania dokumentacją w czterech komórkach, terminowo i z dbałością o potrzeby użytkowników.',
-      developmentPlan: 'Szkolenie z zarządzania projektami; warsztaty z facylitacji spotkań; udział w zespole ds. usprawnień organizacyjnych.',
-      promotionRequest: 'tak',
-      promotionJustification:
-        'Druga z rzędu ocena na poziomie „powyżej oczekiwań”; samodzielne prowadzenie wdrożenia EZD i szkoleń dla pracowników urzędu.',
-      draftedAt: '2026-11-19',
-      sheetGeneratedAt: ts('2026-11-19', '14:10'),
-    },
-    documents: [
-      { id: 'doc-kw-1', kind: 'czesc-i', title: 'Arkusz C — część I (kryteria i termin)', status: 'podpisany', createdAt: ts('2024-12-10', '12:00'), version: 1 },
-      { id: 'doc-kw-2', kind: 'arkusz-okresowy', title: 'Arkusz oceny okresowej C — części I–III', status: 'wygenerowany', createdAt: ts('2026-11-19', '14:10'), version: 1 },
-    ],
-    history: [...base.history, historyEvent(ts('2026-11-19', '14:10'), lis, 'dokument', 'Wygenerowano arkusz do podpisu.', 'podsumowanie')],
-  };
-}
-
 // — Oceny zakończone (historia) —
 
 interface HistoricalSpec {
@@ -696,9 +568,6 @@ const HISTORICAL: readonly HistoricalSpec[] = [
   { id: 'hist-michal-2024', employeeId: 'e-michal', evaluatorId: 'u-piotr', variant: 'C', additional: ['c11'], points: [5, 5, 5, 5, 5, 5], partOneAt: '2023-01-12', draftedAt: '2024-12-15', acknowledgedAt: '2024-12-18' },
   { id: 'hist-ewa-2026', employeeId: 'e-ewa-jankowska', evaluatorId: 'u-piotr', variant: 'C', additional: ['c07', 'c11', 'c14'], points: [7, 7, 7, 5, 7, 7, 7, 5], partOneAt: '2024-11-25', draftedAt: '2026-11-06', acknowledgedAt: '2026-11-09' },
   { id: 'hist-marek-2026', employeeId: 'e-marek', evaluatorId: 'u-piotr', variant: 'C', additional: ['c09', 'c08', 'c11'], points: [9, 9, 9, 7, 9, 9, 9, 9], partOneAt: '2024-12-02', draftedAt: '2026-11-12', acknowledgedAt: '2026-11-13' },
-  { id: 'hist-jan-2026', employeeId: 'e-jan', evaluatorId: 'u-ewa-mazur', variant: 'C', additional: ['c07', 'c05'], points: [5, 5, 5, 5, 5, 5, 7], partOneAt: '2024-11-20', draftedAt: '2026-10-28', acknowledgedAt: '2026-10-30' },
-  { id: 'hist-pawel-2026', employeeId: 'e-pawel', evaluatorId: 'u-karolina', variant: 'B', additional: ['c09', 'c12'], points: [7, 7, 7, 7, 5, 7, 7], partOneAt: '2024-11-22', draftedAt: '2026-10-30', acknowledgedAt: '2026-11-03' },
-  { id: 'hist-katarzyna-2024', employeeId: 'e-katarzyna', evaluatorId: 'u-tomasz', variant: 'C', additional: ['c10'], points: [7, 7, 7, 5, 7, 7], partOneAt: '2022-12-01', draftedAt: '2024-11-20', acknowledgedAt: '2024-11-22' },
 ];
 
 export function seedCases(): StoredCase[] {
@@ -707,9 +576,6 @@ export function seedCases(): StoredCase[] {
     ewaCase(),
     michalCase(),
     zofiaCase(),
-    janCase(),
-    pawelCase(),
-    katarzynaCase(),
     ...HISTORICAL.map(historicalCase),
   ];
 }

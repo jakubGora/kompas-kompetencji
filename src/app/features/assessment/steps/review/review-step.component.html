@@ -152,7 +152,7 @@
     kpButton="secondary"
     icon="printer"
     class="kp-no-print"
-    [loading]="store.busy() === 'document' || store.busy() === 'plan'"
+    [loading]="store.busy() === 'plan'"
     [disabled]="store.redacted()"
     (click)="downloadCard()"
   >

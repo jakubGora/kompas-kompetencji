@@ -11,6 +11,7 @@ import { pageTitle } from '@core/layout/page-title.strategy';
 import { BreadcrumbStore } from '@core/layout/breadcrumb.store';
 import { SessionStore } from '@core/session/session.store';
 import { KpDatePipe } from '@shared/pipes/format.pipes';
+import { AvatarComponent } from '@shared/ui/avatar/avatar.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { DialogService } from '@shared/ui/dialog/dialog.service';
 import { EmptyStateComponent } from '@shared/ui/empty-state/empty-state.component';
@@ -23,6 +24,8 @@ import { AssistantDrawerComponent } from '../../assistant/assistant-drawer.compo
 import { AssistantPanelComponent } from '../../assistant/assistant-panel.component';
 import { CaseStore } from '../data/case.store';
 import { StepHeaderSlot } from './step-header-aside';
+
+type CaseView = 'form' | 'sheet' | 'history';
 
 interface ViewInfo {
   readonly step?: StepId;
@@ -44,6 +47,7 @@ function deepestData(snapshot: ActivatedRouteSnapshot): ViewInfo {
     RouterOutlet,
     RouterLink,
     AssistantPanelComponent,
+    AvatarComponent,
     ButtonComponent,
     EmptyStateComponent,
     IconComponent,
@@ -72,6 +76,14 @@ export class CaseWorkspaceComponent {
     { initialValue: deepestData(this.router.routerState.snapshot.root) },
   );
 
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects),
+    ),
+    { initialValue: this.router.url },
+  );
+
   private readonly wide = toSignal(
     inject(BreakpointObserver)
       .observe('(min-width: 1280px)')
@@ -92,6 +104,31 @@ export class CaseWorkspaceComponent {
     const c = this.store.case();
     if (!c) return 'Ocena';
     return `${c.path === 'first' ? 'Pierwsza ocena' : 'Oceny okresowe'} – ${c.employee.fullName}`;
+  });
+
+  protected readonly subjectPosition = computed(() => {
+    const c = this.store.case();
+    if (!c) return '';
+    return `${c.position.title} ${c.position.code}`.trim();
+  });
+
+  protected readonly subjectOrg = computed(() => {
+    const c = this.store.case();
+    if (!c) return '';
+    const parts = [c.position.division || c.orgUnitName, c.position.department].filter(Boolean);
+    return parts.join(', ');
+  });
+
+  protected readonly activeView = computed<CaseView>(() => {
+    const url = this.url();
+    if (url.includes('/historia')) return 'history';
+    if (url.includes('/arkusz')) return 'sheet';
+    return 'form';
+  });
+
+  protected readonly formLink = computed(() => {
+    const step = this.store.currentStepId() ?? this.view().step;
+    return step ? [this.store.baseUrl(), step] : [this.store.baseUrl()];
   });
 
   protected readonly assistantContext = computed<AssistantContext>(() => {

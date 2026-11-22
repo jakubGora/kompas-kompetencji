@@ -107,15 +107,15 @@
     </section>
   }
 
-  @if (store.redacted()) {
-    <kp-callout tone="neutral" icon="lock">Uzasadnienie i wnioski widzi oceniający i oceniany — w kadrach trafią do akt wraz z arkuszem.</kp-callout>
+  @if (store.redacted() && !c().conclusion.employeeAcknowledgedAt) {
+    <kp-callout tone="neutral" icon="lock">Uzasadnienie i wnioski trafią do kadr po zapoznaniu ocenianego z arkuszem.</kp-callout>
   } @else {
     <div class="kp-summary__duo">
       <section class="kp-card kp-summary__panel" aria-labelledby="kp-justification-title">
         <div class="kp-card__header">
           <h3 class="kp-card__title" id="kp-justification-title">Uzasadnienie</h3>
-          @if (k().justificationAiDraft) {
-            <span class="kp-chip kp-chip--ai"><kp-icon name="sparkles" [size]="12" /> Sugerowane przez AI</span>
+          @if (editable() && k().justificationAiDraft) {
+            <span class="kp-chip kp-chip--ai"><kp-icon name="sparkles" [size]="12" /> Szkic asystenta</span>
           }
         </div>
         @if (k().sheetGeneratedAt && editable()) {
