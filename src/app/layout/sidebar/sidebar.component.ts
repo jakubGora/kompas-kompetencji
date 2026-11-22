@@ -61,6 +61,10 @@ export class SidebarComponent {
     return [item.link, ...(item.alsoActiveOn ?? [])].some((path) => startsWithPath(url, path));
   }
 
+  protected reset(): void {
+    void this.session.resetDemo();
+  }
+
   protected logout(): void {
     void this.session.logout();
   }

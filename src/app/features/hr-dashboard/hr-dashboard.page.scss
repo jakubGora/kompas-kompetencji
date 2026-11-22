@@ -7,7 +7,11 @@
   display: grid;
   gap: var(--kp-space-1);
   align-content: start;
+  // Pełne obramowanie karty + kolorowy pasek. Bez tego buttony tracą krawędzie
+  // względem zwykłych .kp-card (user-agent / brak borderu w surface).
+  border: 1px solid var(--kp-color-border-subtle);
   border-inline-start: 4px solid var(--kp-color-primary);
+  background: var(--kp-color-surface);
   color: var(--kp-color-text);
   font: inherit;
   text-align: start;
@@ -26,6 +30,7 @@
 }
 
 button.kp-hr__kpi {
+  appearance: none;
   cursor: pointer;
   transition:
     box-shadow var(--kp-duration-fast) ease,

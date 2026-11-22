@@ -25,7 +25,7 @@ import { SkeletonComponent } from '@shared/ui/skeleton/skeleton.component';
 import { ToastService } from '@shared/ui/toast/toast.service';
 import { StartCaseDialogComponent, type StartCaseDialogData } from '../start-case/start-case-dialog.component';
 
-type StatusFilter = 'all' | 'uwaga' | 'w-toku' | 'zakonczona';
+type StatusFilter = 'all' | 'uwaga' | 'w-toku' | 'po-terminie' | 'zakonczona';
 
 const START_HORIZON_DAYS = 90;
 
@@ -108,6 +108,8 @@ export class HrDashboardPage {
         switch (status) {
           case 'uwaga':
             return c.status === 'w-toku' && c.attention.length > 0;
+          case 'po-terminie':
+            return c.status === 'w-toku' && c.attention.includes('po-terminie');
           case 'w-toku':
           case 'zakonczona':
             return c.status === status;
@@ -130,7 +132,9 @@ export class HrDashboardPage {
   }
 
   protected setStatus(value: string): void {
-    this.statusFilter.set(value === 'uwaga' || value === 'w-toku' || value === 'zakonczona' ? value : 'all');
+    this.statusFilter.set(
+      value === 'uwaga' || value === 'w-toku' || value === 'po-terminie' || value === 'zakonczona' ? value : 'all',
+    );
   }
 
   protected clearFilters(): void {

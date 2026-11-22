@@ -16,4 +16,8 @@ export class SessionApi {
   demo(): Observable<DemoInfo> {
     return this.http.get<DemoInfo>(`${this.base}/demo`);
   }
+
+  reset(): Observable<{ landing: string }> {
+    return this.http.post<{ landing: string }>(`${this.base}/demo/reset`, {});
+  }
 }

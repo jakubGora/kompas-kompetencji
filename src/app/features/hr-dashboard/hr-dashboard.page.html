@@ -33,10 +33,10 @@
         <span class="kp-kpi__value">{{ needsAttention().length }}</span>
         <span class="kp-kpi__label">wymaga uwagi</span>
       </button>
-      <div class="kp-card kp-hr__kpi kp-hr__kpi--danger">
+      <button type="button" class="kp-card kp-hr__kpi kp-hr__kpi--danger" [class.kp-hr__kpi--active]="statusFilter() === 'po-terminie'" (click)="setStatus(statusFilter() === 'po-terminie' ? 'all' : 'po-terminie')">
         <span class="kp-kpi__value">{{ overdueCount() }}</span>
         <span class="kp-kpi__label">po terminie</span>
-      </div>
+      </button>
       <button type="button" class="kp-card kp-hr__kpi kp-hr__kpi--success" [class.kp-hr__kpi--active]="statusFilter() === 'zakonczona'" (click)="setStatus(statusFilter() === 'zakonczona' ? 'all' : 'zakonczona')">
         <span class="kp-kpi__value">{{ completedThisYear() }}</span>
         <span class="kp-kpi__label">zakończonych w {{ session.today().slice(0, 4) }}</span>
