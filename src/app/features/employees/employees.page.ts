@@ -8,7 +8,7 @@ import { BreadcrumbStore } from '@core/layout/breadcrumb.store';
 import { SessionStore } from '@core/session/session.store';
 import { KpDatePipe } from '@shared/pipes/format.pipes';
 import { OUTCOME_TONE, PATH_LABEL } from '@shared/presentation/case-presentation';
-import { CIVIL_STATUS_LABEL } from '@shared/presentation/people-presentation';
+import { CIVIL_STATUS_LABEL, EMPLOYMENT_BASIS_LABEL, employmentBasisFor } from '@shared/presentation/people-presentation';
 import { AvatarComponent } from '@shared/ui/avatar/avatar.component';
 import { BadgeComponent } from '@shared/ui/badge/badge.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
@@ -91,7 +91,7 @@ type Scope = 'all' | 'active' | 'idle';
               <thead>
                 <tr>
                   <th scope="col">Pracownik</th>
-                  <th scope="col">Status</th>
+                  <th scope="col">Umowa</th>
                   @if (session.isHr()) {
                     <th scope="col">Przełożony</th>
                   }
@@ -113,8 +113,8 @@ type Scope = 'all' | 'active' | 'idle';
                       </div>
                     </td>
                     <td class="kp-employees__status">
-                      {{ statusLabel[employee.status] }}
-                      <span class="kp-employees__meta">od {{ employee.employedSince | kpDate }}</span>
+                      {{ contractLabel[contractOf(employee.suggestedPath)] }}
+                      <span class="kp-employees__meta">{{ statusLabel[employee.status] }} · od {{ employee.employedSince | kpDate }}</span>
                     </td>
                     @if (session.isHr()) {
                       <td class="kp-employees__nowrap">{{ employee.supervisor.fullName }}</td>
@@ -213,6 +213,8 @@ export class EmployeesPage {
   protected readonly session = inject(SessionStore);
 
   protected readonly statusLabel = CIVIL_STATUS_LABEL;
+  protected readonly contractLabel = EMPLOYMENT_BASIS_LABEL;
+  protected readonly contractOf = employmentBasisFor;
   protected readonly outcomeTone = OUTCOME_TONE;
   protected readonly pathLabel = PATH_LABEL;
 

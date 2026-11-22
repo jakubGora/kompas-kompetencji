@@ -3,12 +3,14 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { PeopleApi } from '@core/api/people.api';
 import type { CaseSummary } from '@core/domain/assessment.model';
+import type { EmployeeListItem } from '@core/domain/people.model';
 import { BreadcrumbStore } from '@core/layout/breadcrumb.store';
 import { SessionStore } from '@core/session/session.store';
 import { toApiError } from '@core/http/api-error';
 import { KpDatePipe, KpScorePipe } from '@shared/pipes/format.pipes';
 import { ATTENTION, OUTCOME_TONE, PATH_LABEL, caseKindLabel } from '@shared/presentation/case-presentation';
-import { CIVIL_STATUS_LABEL } from '@shared/presentation/people-presentation';
+import { CIVIL_STATUS_LABEL, EMPLOYMENT_BASIS_LABEL, employmentBasisFor } from '@shared/presentation/people-presentation';
+import { EditEmploymentDialogComponent, type EditEmploymentData } from './edit-employment-dialog.component';
 import { AvatarComponent } from '@shared/ui/avatar/avatar.component';
 import { BadgeComponent } from '@shared/ui/badge/badge.component';
 import { ButtonComponent } from '@shared/ui/button/button.component';
@@ -52,6 +54,8 @@ export class EmployeeDetailPage {
   protected readonly outcomeTone = OUTCOME_TONE;
   protected readonly attention = ATTENTION;
   protected readonly pathLabel = PATH_LABEL;
+  protected readonly contractLabel = EMPLOYMENT_BASIS_LABEL;
+  protected readonly contractOf = employmentBasisFor;
   protected readonly kindLabel = caseKindLabel;
 
   protected readonly detail = rxResource({
@@ -62,6 +66,11 @@ export class EmployeeDetailPage {
   protected readonly errorStatus = computed(() => (this.detail.error() ? toApiError(this.detail.error()).status : null));
   protected readonly dominantTasks = computed(() => this.data()?.position.tasks.filter((task) => task.kind === 'dominujace') ?? []);
   protected readonly otherTasksCount = computed(() => (this.data()?.position.tasks.length ?? 0) - this.dominantTasks().length);
+  protected readonly canEdit = computed(() => {
+    const employee = this.data()?.employee;
+    if (!employee) return false;
+    return this.session.isHr() || employee.supervisor.id === this.session.user()?.id;
+  });
   protected readonly canStart = computed(() => {
     const employee = this.data()?.employee;
     if (!employee || employee.activeCaseId) return false;
@@ -72,6 +81,20 @@ export class EmployeeDetailPage {
     effect(() => {
       const root = this.session.isHr() ? { label: 'Pracownicy', link: '/pracownicy' } : { label: 'Mój zespół', link: '/pracownicy' };
       this.breadcrumbs.set([root, { label: this.data()?.employee.fullName ?? 'Pracownik' }]);
+    });
+  }
+
+  protected editEmployment(): void {
+    const employee = this.data()?.employee;
+    if (!employee) return;
+    const ref = this.dialog.open<EmployeeListItem | undefined, EditEmploymentData, EditEmploymentDialogComponent>(
+      EditEmploymentDialogComponent,
+      { data: { employee }, labelledBy: 'kp-edit-employment-title' },
+    );
+    ref.closed.subscribe((updated) => {
+      if (!updated) return;
+      this.toast.success(`Zapisano umowę: ${updated.fullName}`, `${this.contractLabel[this.contractOf(updated.suggestedPath)]}. Kolejna ocena: ${this.pathLabel[updated.suggestedPath].toLowerCase()}.`);
+      this.detail.reload();
     });
   }
 

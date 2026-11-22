@@ -35,6 +35,9 @@ export interface OrgUnit {
 /** Pracownik służby cywilnej (umowa o pracę) albo urzędnik służby cywilnej (mianowanie). */
 export type CivilServiceStatus = 'pracownik-sc' | 'urzednik-sc';
 
+/** Pierwsza umowa otwiera pierwszą ocenę, umowa na czas nieokreślony — ocenę okresową. */
+export type EmploymentBasis = 'pierwsza-umowa' | 'czas-nieokreslony';
+
 export interface Absence {
   readonly from: IsoDate;
   readonly to: IsoDate;
@@ -65,7 +68,7 @@ export interface Employee {
   readonly status: CivilServiceStatus;
   readonly employment: {
     readonly since: IsoDate;
-    readonly basis: 'czas-nieokreslony' | 'pierwsza-umowa';
+    readonly basis: EmploymentBasis;
     /** Koniec pierwszej umowy na czas określony (12 miesięcy). */
     readonly firstContractEnd?: IsoDate;
   };

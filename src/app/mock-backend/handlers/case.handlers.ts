@@ -466,6 +466,32 @@ function generateDocument(ctx: RouteContext) {
   const now = db.now();
   const actor = personRef(user);
 
+  if (kind === 'czesc-i') {
+    requireStepOpen(c, 'rozmowa-wstepna');
+    const title =
+      c.path === 'first'
+        ? 'Pierwsza ocena — ustalenia rozmowy wstępnej i termin sprawozdania'
+        : `Arkusz ${c.positionReview.confirmedVariant ?? ''} — część I (kryteria i termin)`;
+    const signed = Boolean(c.preliminary.employeeAcknowledgedAt);
+    return presentCase(
+      db.saveCase({
+        ...c,
+        documents: upsertDocument(c, kind, title, signed ? 'podpisany' : 'wygenerowany', now),
+        history: [
+          ...c.history,
+          historyEvent(
+            now,
+            actor,
+            'dokument',
+            `${signed ? 'Zapisano podpisaną' : 'Wygenerowano'} ${title.charAt(0).toLowerCase()}${title.slice(1)}.`,
+            'rozmowa-wstepna',
+          ),
+        ],
+      }),
+      user,
+    );
+  }
+
   if (kind === 'arkusz-okresowy' || kind === 'arkusz-pierwszej-oceny') {
     requireStepOpen(c, 'podsumowanie');
     const withDate: StoredCase = { ...c, conclusion: { ...c.conclusion, draftedAt: c.conclusion.draftedAt ?? db.state.today } };

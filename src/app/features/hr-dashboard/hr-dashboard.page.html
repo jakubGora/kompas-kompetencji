@@ -99,7 +99,7 @@
                 <div class="kp-hr__item-main">
                   <a class="kp-hr__item-link" [routerLink]="['/pracownicy', employee.id]">{{ employee.fullName }}</a>
                   <p class="kp-hr__item-meta">
-                    {{ employee.suggestedPath === 'first' ? 'Pierwsza ocena' : 'Ocena okresowa' }} · {{ employee.orgUnitCode }}
+                    {{ employee.suggestedPath === 'first' ? 'Pierwsza umowa · pierwsza ocena' : 'Czas nieokreślony · ocena okresowa' }} · {{ employee.orgUnitCode }}
                   </p>
                 </div>
                 <div class="kp-hr__item-side">

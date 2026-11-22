@@ -29,6 +29,10 @@
       <p class="kp-person__meta">{{ d.employee.positionTitle }} · {{ d.employee.orgUnitName }}</p>
       <dl class="kp-person__facts">
         <div>
+          <dt>Umowa</dt>
+          <dd>{{ contractLabel[contractOf(d.employee.suggestedPath)] }}</dd>
+        </div>
+        <div>
           <dt>Zatrudnienie od</dt>
           <dd>{{ d.employee.employedSince | kpDate }}</dd>
         </div>
@@ -43,6 +47,9 @@
       </dl>
     </div>
     <div class="kp-person__actions">
+      @if (canEdit()) {
+        <button type="button" kpButton="secondary" icon="pencil" (click)="editEmployment()">Zmień umowę</button>
+      }
       @if (d.employee.activeCaseId) {
         <a kpButton iconEnd="arrow-right" [routerLink]="['/oceny', d.employee.activeCaseId]">Przejdź do oceny w toku</a>
       } @else if (canStart()) {

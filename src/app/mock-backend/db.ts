@@ -96,7 +96,9 @@ export class MockDb {
   }
 
   employees(): readonly Employee[] {
-    return [...EMPLOYEES, ...this.current.employees];
+    const byId = new Map(EMPLOYEES.map((employee) => [employee.id, employee]));
+    for (const employee of this.current.employees) byId.set(employee.id, employee);
+    return [...byId.values()];
   }
 
   employee(id: string): Employee {

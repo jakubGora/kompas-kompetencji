@@ -110,6 +110,31 @@ export function registerPeopleRoutes(router: MockRouter): void {
       db.saveEmployee(employee);
       return listItem(db, employee);
     })
+    .patch('/employees/:employeeId', ({ db, user, params, body }) => {
+      const data = (body ?? {}) as CreateEmployeeBody;
+      const current = db.employee(params['employeeId'] ?? '');
+      const isHr = user.roles.includes('hr');
+      if (!isHr && current.supervisorId !== user.id) {
+        throw forbidden('Umowę zmieniają kadry albo bezpośredni przełożony.');
+      }
+      if (data.employmentBasis !== 'pierwsza-umowa' && data.employmentBasis !== 'czas-nieokreslony') {
+        throw badRequest('Wybierz rodzaj umowy.');
+      }
+      const employedSince = data.employedSince?.trim() ?? '';
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(employedSince)) throw badRequest('Podaj datę zatrudnienia.');
+      const basis = data.employmentBasis;
+      const [year, month, day] = employedSince.split('-');
+      const updated: Employee = {
+        ...current,
+        employment: {
+          since: employedSince,
+          basis,
+          ...(basis === 'pierwsza-umowa' ? { firstContractEnd: `${Number(year) + 1}-${month}-${day}` } : {}),
+        },
+      };
+      db.saveEmployee(updated);
+      return listItem(db, updated);
+    })
     .get('/employees/:employeeId', ({ db, user, params }): EmployeeDetail => {
       const employee = db.employee(params['employeeId'] ?? '');
       if (!canSeeEmployee(db, user, employee)) {

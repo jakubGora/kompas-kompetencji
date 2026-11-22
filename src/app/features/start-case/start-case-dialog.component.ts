@@ -8,6 +8,7 @@ import { stepsFor } from '@core/domain/workflow';
 import { toApiError } from '@core/http/api-error';
 import { KpDatePipe } from '@shared/pipes/format.pipes';
 import { PATH_LABEL } from '@shared/presentation/case-presentation';
+import { EMPLOYMENT_BASIS_LABEL, employmentBasisFor } from '@shared/presentation/people-presentation';
 import { ButtonComponent } from '@shared/ui/button/button.component';
 import { CalloutComponent } from '@shared/ui/callout/callout.component';
 import { DialogShellComponent } from '@shared/ui/dialog/dialog-shell.component';
@@ -49,6 +50,10 @@ const PATH_BASIS = {
 
         @if (selected(); as employee) {
           <dl class="kp-dl kp-start__facts">
+            <div>
+              <dt>Umowa</dt>
+              <dd>{{ contractLabel[contractOf(employee.suggestedPath)] }}</dd>
+            </div>
             <div>
               <dt>Ścieżka</dt>
               <dd><strong>{{ pathLabel[employee.suggestedPath] }}</strong></dd>
@@ -131,6 +136,8 @@ export class StartCaseDialogComponent {
   protected readonly ref = inject<DialogRef<CaseSummary>>(DialogRef);
 
   protected readonly pathLabel = PATH_LABEL;
+  protected readonly contractLabel = EMPLOYMENT_BASIS_LABEL;
+  protected readonly contractOf = employmentBasisFor;
   protected readonly pathBasis = PATH_BASIS;
   protected readonly available = this.data.employees.filter((employee) => !employee.activeCaseId);
   protected readonly saving = signal(false);

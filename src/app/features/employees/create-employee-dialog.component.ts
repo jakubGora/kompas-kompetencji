@@ -61,10 +61,10 @@ import { firstValueFrom } from 'rxjs';
               <option value="urzednik-sc">Urzędnik służby cywilnej</option>
             </select>
           </kp-field>
-          <kp-field label="Podstawa zatrudnienia" [field]="f.employmentBasis">
+          <kp-field label="Rodzaj umowy" hint="Od umowy zależy formularz kolejnej oceny." [field]="f.employmentBasis">
             <select kpControl class="kp-select" [formField]="f.employmentBasis">
-              <option value="pierwsza-umowa">Pierwsza umowa (ścieżka pierwszej oceny)</option>
-              <option value="czas-nieokreslony">Umowa na czas nieokreślony (ocena okresowa)</option>
+              <option value="pierwsza-umowa">Pierwsza umowa na czas określony — pierwsza ocena</option>
+              <option value="czas-nieokreslony">Umowa na czas nieokreślony — ocena okresowa</option>
             </select>
           </kp-field>
         </div>

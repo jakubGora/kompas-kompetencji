@@ -188,11 +188,64 @@ const OPENING = [
   'Wracając do sytuacji „{title}” ({date}): {fact}. {ask}',
   '{date}, „{title}” — {fact}. {ask}',
 ];
-const GAP = [
-  'Opowiedz o jednej sytuacji z tego okresu, w której było widać: „{text}”.',
-  'Kiedy ostatnio nie wyszło coś w tym rodzaju: „{text}”? Co stanęło na przeszkodzie?',
-  'Jak to wygląda u Ciebie na co dzień: „{text}”? Podaj przykład z okresu oceny.',
-];
+const GAP_BY_CRITERION: Readonly<Record<string, readonly [string, string]>> = {
+  c01: [
+    'Opowiedz o sytuacji z okresu oceny, w której szczególnie liczyła się rzetelność: przepis, termin albo jakość pracy. Co zrobiłeś i jaki był skutek?',
+    'Kiedy w tym okresie coś nie zostało dopięte tak, jak powinno? Co stanęło na przeszkodzie i jak to naprawiłeś?',
+  ],
+  c02: [
+    'Opowiedz o rozmowie albo piśmie z tego okresu, w którym musiałeś coś wyjaśnić innej osobie. Co powiedziałeś i czy rozmówca Cię zrozumiał?',
+    'Kiedy informacja, którą przekazałeś, okazała się niejasna albo spóźniona? Co byś następnym razem zrobił inaczej?',
+  ],
+  c03: [
+    'Opowiedz o zadaniu z tego okresu, do którego brakowało Ci wiedzy albo umiejętności. Jak je uzupełniłeś i co z tego zostało w pracy?',
+    'Czego nauczyłeś się w tym okresie i przy jakim zadaniu z tego skorzystałeś? Podaj jeden przykład.',
+  ],
+  c04: [
+    'Opowiedz o zadaniu z tego okresu, które miało termin i kilka zależnych czynności. Jak ułożyłeś pracę i co udało się skończyć na czas?',
+    'Kiedy nie udało się dotrzymać terminu albo ułożona kolejność prac się zmieniła? Co wtedy zrobiłeś, żeby dojść do celu?',
+  ],
+  c05: [
+    'Opowiedz o problemie z tego okresu, który rozwiązałeś inaczej niż zwykle. Na czym polegał pomysł i czy się sprawdził?',
+    'Kiedy utknąłeś w znanym sposobie działania? Co pomogło ruszyć dalej?',
+  ],
+  c06: [
+    'Opowiedz o sprawie z tego okresu, którą prowadziłeś razem z kimś innym. Jaki był Twój wkład i jak podzieliliście się robotą?',
+    'Kiedy współpraca szła opornie? Co zrobiłeś, żeby ją ułożyć?',
+  ],
+  c07: [
+    'Opowiedz o sprawie z tego okresu, w której musiałeś rozłożyć problem na części, zanim coś zaproponowałeś. Jak do tego doszedłeś?',
+    'Kiedy wniosek okazał się nietrafiony, bo zabrakło jakiejś informacji? Czego wtedy nie sprawdziłeś?',
+  ],
+  c08: [
+    'Opowiedz o uzgodnieniu z tego okresu, w którym strony chciały czegoś innego. Do czego doszliście i czym się kierowałeś?',
+    'Kiedy nie udało się dojść do porozumienia? Co stanęło na przeszkodzie?',
+  ],
+  c09: [
+    'Opowiedz o wystąpieniu albo prezentacji z tego okresu. Dla kogo mówiłeś, co było najważniejsze i jak to zostało przyjęte?',
+    'Kiedy wystąpienie nie poszło tak, jak chciałeś? Co byś następnym razem zmienił?',
+  ],
+  c10: [
+    'Opowiedz o kontakcie z interesantem albo inną osobą z zewnątrz z tego okresu. O co prosiła i jak sprawę zakończyłeś?',
+    'Kiedy nie udało się odpowiedzieć tak, jak ktoś oczekiwał? Co było przyczyną i co zrobiłeś dalej?',
+  ],
+  c11: [
+    'Opowiedz o nagłej albo trudnej sytuacji z tego okresu. Co zrobiłeś w pierwszej kolejności i jaki był skutek?',
+    'Czego w takiej sytuacji zabrakło — informacji, ludzi, decyzji? Jak to nadrobiłeś?',
+  ],
+  c12: [
+    'Opowiedz o zadaniu z tego okresu, które wykraczało poza bieżączkę i dotyczyło dłuższego celu. Jak je połączyłeś z pracą wydziału?',
+    'Kiedy bieżące sprawy odsunęły coś ważniejszego na później? Jak wtedy wybrałeś, czym się zająć?',
+  ],
+  c13: [
+    'Opowiedz o sytuacji z tego okresu, w której od Twojej decyzji zależała praca innych osób. Co ustaliłeś i jak to sprawdziłeś?',
+    'Kiedy ktoś z zespołu nie dostał od Ciebie na czas tego, czego potrzebował? Co wtedy zmieniłeś?',
+  ],
+  c14: [
+    'Opowiedz o decyzji z tego okresu, którą podjąłeś sam. Na czym ją oparłeś i jakie miała skutki?',
+    'Kiedy wahałeś się z decyzją albo oddałeś ją komuś innemu? Co o tym zdecydowało?',
+  ],
+};
 
 function clausesOf(text: string): string[] {
   const rough = text
@@ -232,8 +285,23 @@ function fill(template: string, values: Readonly<Record<string, string>>): strin
   return template.replace(/\{(\w+)\}/g, (_, key: string) => values[key] ?? '');
 }
 
+function thinObservationQuestion(observation: { title: string; date: string }, use: number): string {
+  const title = observation.title || 'tę sytuację';
+  const date = formatDatePl(observation.date);
+  const options = [
+    `${date} zapisałeś sytuację „${title}”. Opowiedz, co dokładnie wtedy zrobiłeś i jaki był skutek.`,
+    `Wracając do „${title}” (${date}): co w tej sytuacji zależało od Ciebie, a co od innych osób?`,
+    `Czego sytuacja „${title}” (${date}) uczy na kolejny okres? Co warto powtórzyć, a czego uniknąć?`,
+  ];
+  return options[use % options.length]!;
+}
+
 function observationQuestion(observation: { title: string; date: string; description: string }, use: number): string {
-  const clauses = clausesOf(observation.description);
+  const description = observation.description.replace(/\s+/g, ' ').trim();
+  if (description.length < 40 || normalize(description) === normalize(observation.title)) {
+    return thinObservationQuestion(observation, use);
+  }
+  const clauses = clausesOf(description);
   const order = clauses
     .map((_, index) => index)
     .sort((a, b) => KIND_RANK[kindOf(clauses[a]!)] - KIND_RANK[kindOf(clauses[b]!)] || clauses[b]!.length - clauses[a]!.length);
@@ -247,8 +315,12 @@ function observationQuestion(observation: { title: string; date: string; descrip
   });
 }
 
-function gapQuestion(indicatorText: string, use: number): string {
-  return fill(GAP[use % GAP.length]!, { text: truncate(indicatorText, 90) });
+function gapQuestion(criterionId: string, use: number): string {
+  const options = GAP_BY_CRITERION[criterionId] ?? [
+    `Opowiedz o jednej sytuacji z okresu oceny związanej z obszarem „${criterionName(criterionId).toLowerCase()}”. Co zrobiłeś i jaki był skutek?`,
+    `Przypomnij sytuację z tego okresu, w której w obszarze „${criterionName(criterionId).toLowerCase()}” coś poszło nie tak. Co stanęło na przeszkodzie?`,
+  ];
+  return options[use % options.length]!;
 }
 
 export function buildConversationPlan(c: AssessmentCaseData, model: CompetencyModel, generatedAt: IsoDateTime): ConversationPlan {
@@ -262,15 +334,19 @@ export function buildConversationPlan(c: AssessmentCaseData, model: CompetencyMo
     const competency = model.competencies.find((candidate) => candidate.id === criterionId);
     const coveredIndicators = new Set(observations.flatMap((o) => o.indicatorIds));
     const missing = (competency?.indicators ?? []).filter((indicator) => !coveredIndicators.has(indicator.id)).slice(0, 2);
-    const gaps = missing.map((indicator) => `Brak obserwacji: „${truncate(indicator.text, 90)}” — zapytaj o przykład z okresu oceny.`);
+    const gaps = missing.map((indicator) => `Brak przykładu dotyczącego: ${truncate(indicator.text, 90)}.`);
     const questions = observations.slice(-2).map((observation) => {
       const use = seen.get(observation.id) ?? 0;
       seen.set(observation.id, use + 1);
       return observationQuestion(observation, use);
     });
-    for (const indicator of questions.length > 0 ? missing.slice(0, 1) : missing) {
-      questions.push(gapQuestion(indicator.text, gapUses));
+    if (questions.length === 0) {
+      questions.push(gapQuestion(criterionId, gapUses));
       gapUses += 1;
+      if (missing.length > 1) {
+        questions.push(gapQuestion(criterionId, gapUses));
+        gapUses += 1;
+      }
     }
     return {
       criterionId,

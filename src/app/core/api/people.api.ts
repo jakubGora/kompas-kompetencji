@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import type { CivilServiceStatus, EmployeeListItem, PersonRef, UserRole } from '@core/domain/people.model';
+import type { CivilServiceStatus, EmployeeListItem, EmploymentBasis, PersonRef, UserRole } from '@core/domain/people.model';
 import { environment } from '@env/environment';
 import type { Observable } from 'rxjs';
 import type { EmployeeDetail } from './api.types';
@@ -18,7 +18,7 @@ export interface CreateEmployeeRequest {
   readonly lastName: string;
   readonly positionId: string;
   readonly status: CivilServiceStatus;
-  readonly employmentBasis: 'pierwsza-umowa' | 'czas-nieokreslony';
+  readonly employmentBasis: EmploymentBasis;
   readonly employedSince: string;
   readonly supervisorId?: string;
 }
@@ -34,6 +34,10 @@ export class PeopleApi {
 
   createEmployee(body: CreateEmployeeRequest): Observable<EmployeeListItem> {
     return this.http.post<EmployeeListItem>(`${this.base}/employees`, body);
+  }
+
+  updateEmployment(employeeId: string, body: { employmentBasis: EmploymentBasis; employedSince: string }): Observable<EmployeeListItem> {
+    return this.http.patch<EmployeeListItem>(`${this.base}/employees/${encodeURIComponent(employeeId)}`, body);
   }
 
   employee(employeeId: string): Observable<EmployeeDetail> {
