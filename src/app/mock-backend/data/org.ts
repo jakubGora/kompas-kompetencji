@@ -47,7 +47,6 @@ export const USERS: readonly SeedUser[] = [
     orgUnitId: 'dc-wzksoic',
     roles: ['manager'],
     email: 'piotr.zielinski@kompas.demo',
-    avatarUrl: '/avatars/piotr-zielinski.png',
     login: 'piotr',
     password: 'piotr',
   },
