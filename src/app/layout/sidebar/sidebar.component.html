@@ -34,13 +34,6 @@
 
 <ng-template #accountMenu>
   <div class="kp-menu kp-sidebar__menu" cdkMenu>
-    @if (session.isDemo) {
-      <button type="button" class="kp-menu__item" cdkMenuItem (cdkMenuItemTriggered)="reset()">
-        <kp-icon name="reset" [size]="16" />
-        Przywróć dane startowe
-      </button>
-      <div class="kp-menu__separator" role="separator"></div>
-    }
     <a class="kp-menu__item" cdkMenuItem routerLink="/baza-wiedzy">
       <kp-icon name="help" [size]="16" />
       Pomoc i źródła
