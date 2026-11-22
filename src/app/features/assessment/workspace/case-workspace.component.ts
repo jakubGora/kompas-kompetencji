@@ -1,9 +1,9 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
-import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { ActivatedRouteSnapshot, NavigationEnd, NavigationStart, Router, RouterLink, RouterOutlet } from '@angular/router';
 import type { AssistantContext } from '@core/domain/assistant.model';
 import type { StepId } from '@core/domain/assessment.model';
 import { stepDefinition } from '@core/domain/workflow';
@@ -147,6 +147,10 @@ export class CaseWorkspaceComponent {
   constructor() {
     const breadcrumbs = inject(BreadcrumbStore);
     const title = inject(Title);
+    const leaving = this.router.events.pipe(filter((event) => event instanceof NavigationStart)).subscribe(() => {
+      void this.store.flushAll();
+    });
+    inject(DestroyRef).onDestroy(() => leaving.unsubscribe());
 
     effect(() => this.store.load(this.caseId()));
 

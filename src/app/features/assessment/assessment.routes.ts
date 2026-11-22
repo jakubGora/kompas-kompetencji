@@ -1,13 +1,18 @@
-import type { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import type { CanDeactivateFn, Routes } from '@angular/router';
 import { CaseStore } from './data/case.store';
 import { CaseRedirectComponent } from './workspace/case-redirect.component';
 import { CaseWorkspaceComponent } from './workspace/case-workspace.component';
 import { StepHeaderSlot } from './workspace/step-header-aside';
 
+/** Zanim użytkownik wyjdzie z oceny, domknij autozapis. Inaczej powrót wczytuje starą wersję. */
+const flushAssessment: CanDeactivateFn<unknown> = () => inject(CaseStore).flushAll().then(() => true);
+
 export default [
   {
     path: '',
     component: CaseWorkspaceComponent,
+    canDeactivate: [flushAssessment],
     providers: [CaseStore, StepHeaderSlot],
     children: [
       { path: '', pathMatch: 'full', component: CaseRedirectComponent },
