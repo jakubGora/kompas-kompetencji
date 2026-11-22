@@ -1,0 +1,56 @@
+<main class="kp-login">
+  <section class="kp-login__panel" aria-labelledby="kp-login-title">
+    <img class="kp-login__logo" src="/brand/kompas-logo.svg" alt="Kompas Kompetencji" width="200" height="48" />
+    <h1 id="kp-login-title" class="kp-login__title">Zaloguj się</h1>
+    <p class="kp-login__lead">Wejdź na konto demonstracyjne, żeby przeglądać oceny i asystenta AI.</p>
+
+    <form class="kp-login__form" (submit)="submit($event)">
+      <label class="kp-login__field">
+        <span>Login</span>
+        <input
+          name="login"
+          autocomplete="username"
+          [ngModel]="login()"
+          (ngModelChange)="login.set($event)"
+          required
+        />
+      </label>
+      <label class="kp-login__field">
+        <span>Hasło</span>
+        <input
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          required
+        />
+      </label>
+      @if (error()) {
+        <p class="kp-login__error" role="alert">{{ error() }}</p>
+      }
+      <button kpButton type="submit" [disabled]="submitting() || !login() || !password()">
+        {{ submitting() ? 'Logowanie…' : 'Zaloguj' }}
+      </button>
+    </form>
+
+    @if (accounts().length) {
+      <div class="kp-login__accounts">
+        <p class="kp-login__accounts-label">Wybierz konto (uzupełnia login)</p>
+        <ul role="list">
+          @for (account of accounts(); track account.login) {
+            <li>
+              <button type="button" class="kp-login__account" (click)="pick(account)">
+                <kp-avatar [name]="account.fullName" [src]="account.avatarUrl" [size]="36" />
+                <span>
+                  <strong>{{ account.fullName }}</strong>
+                  <span class="kp-login__account-meta">{{ account.login }} · {{ account.jobTitle }}</span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+</main>

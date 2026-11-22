@@ -20,6 +20,20 @@ export interface SessionInfo {
   readonly today: IsoDate;
 }
 
+export interface AuthAccountHint {
+  readonly login: string;
+  readonly fullName: string;
+  readonly jobTitle: string;
+  readonly roles: readonly UserRole[];
+  readonly avatarUrl?: string;
+}
+
+export interface LoginResult {
+  readonly token: string;
+  readonly expiresAt: string;
+  readonly user: AppUser;
+}
+
 export interface DemoAccount extends PersonRef {
   readonly roles: readonly UserRole[];
   readonly hint: string;

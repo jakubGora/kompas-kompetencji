@@ -1,7 +1,7 @@
 import type { DemoAccount, DemoInfo, SessionInfo } from '@core/api/api.types';
 import { pluralPl } from '@core/domain/date';
 import type { AppUser, OrgUnit } from '@core/domain/people.model';
-import { USERS } from '../data/org';
+import { USERS, publicUser, type SeedUser } from '../data/org';
 import { SCENARIOS } from '../data/scenarios';
 import type { MockDb } from '../db';
 import { badRequest } from '../http';
@@ -17,7 +17,7 @@ function rootUnit(db: MockDb, unit: OrgUnit): OrgUnit {
 
 export function sessionInfo(db: MockDb, user: AppUser): SessionInfo {
   const orgUnit = db.orgUnit(user.orgUnitId);
-  return { user, orgUnit, office: rootUnit(db, orgUnit), today: db.state.today };
+  return { user: publicUser(user as SeedUser), orgUnit, office: rootUnit(db, orgUnit), today: db.state.today };
 }
 
 function accountHint(db: MockDb, user: AppUser): string {
@@ -57,12 +57,6 @@ export function registerSessionRoutes(router: MockRouter): void {
   router
     .get('/session', ({ db, user }) => sessionInfo(db, user))
     .get('/demo', ({ db }) => demoInfo(db))
-    .post('/demo/session', ({ db, body }) => {
-      const { userId } = (body ?? {}) as { userId?: string };
-      const user = db.user(userId ?? '');
-      db.update((state) => ({ ...state, sessionUserId: user.id }));
-      return sessionInfo(db, user);
-    })
     .post('/demo/scenario', ({ db, body }) => {
       const { scenarioId } = (body ?? {}) as { scenarioId?: string };
       const scenario = SCENARIOS.find((candidate) => candidate.id === scenarioId);

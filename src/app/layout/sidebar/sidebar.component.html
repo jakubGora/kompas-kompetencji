@@ -35,22 +35,6 @@
 <ng-template #accountMenu>
   <div class="kp-menu kp-sidebar__menu" cdkMenu>
     @if (session.isDemo) {
-      <p class="kp-menu__label" aria-hidden="true">Konto demonstracyjne</p>
-      @for (account of demo.accounts(); track account.id) {
-        <button
-          type="button"
-          class="kp-menu__item"
-          cdkMenuItemRadio
-          [cdkMenuItemChecked]="account.id === user().id"
-          (cdkMenuItemTriggered)="switchTo(account.id)"
-        >
-          <span>
-            {{ account.fullName }}
-            <span class="kp-menu__item-meta">{{ account.hint }}</span>
-          </span>
-        </button>
-      }
-      <div class="kp-menu__separator" role="separator"></div>
       <p class="kp-menu__label" aria-hidden="true">Scenariusz danych · dzień demo {{ session.today() | kpDate }}</p>
       @for (scenario of demo.scenarios(); track scenario.id) {
         <button
@@ -76,5 +60,8 @@
       <kp-icon name="help" [size]="16" />
       Pomoc i źródła
     </a>
+    <button type="button" class="kp-menu__item" cdkMenuItem (cdkMenuItemTriggered)="logout()">
+      Wyloguj
+    </button>
   </div>
 </ng-template>

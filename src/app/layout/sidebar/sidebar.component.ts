@@ -65,17 +65,15 @@ export class SidebarComponent {
     return [item.link, ...(item.alsoActiveOn ?? [])].some((path) => startsWithPath(url, path));
   }
 
-  protected switchTo(userId: string): void {
-    if (userId !== this.user().id) {
-      void this.session.switchUser(userId);
-    }
-  }
-
   protected loadScenario(id: string): void {
     void this.session.loadScenario(id);
   }
 
   protected reset(): void {
     void this.session.resetDemo();
+  }
+
+  protected logout(): void {
+    void this.session.logout();
   }
 }

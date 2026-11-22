@@ -1,13 +1,21 @@
 import { inject } from '@angular/core';
 import type { Routes } from '@angular/router';
+import { authGuard, guestGuard } from '@core/session/auth.guard';
 import { roleGuard } from '@core/session/role.guard';
 import { SessionStore } from '@core/session/session.store';
 import { ShellComponent } from './layout/shell/shell.component';
 
 export const routes: Routes = [
   {
+    path: 'logowanie',
+    title: 'Logowanie',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./features/auth/login.page').then((m) => m.LoginPage),
+  },
+  {
     path: '',
     component: ShellComponent,
+    canActivate: [authGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: () => inject(SessionStore).homeUrl() },
       {

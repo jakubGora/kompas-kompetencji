@@ -33,7 +33,13 @@ export const ORG_UNITS: readonly OrgUnit[] = [
   { id: 'bdg-wop', code: 'BDG WOP', name: 'Wydział Organizacji Pracy', kind: 'wydzial', parentId: 'bdg' },
 ];
 
-export const USERS: readonly AppUser[] = [
+/** Hasła tylko w seedzie demo (udostępniane jury) — nie trafiają do odpowiedzi API. */
+export interface SeedUser extends AppUser {
+  readonly login: string;
+  readonly password: string;
+}
+
+export const USERS: readonly SeedUser[] = [
   {
     id: 'u-piotr',
     fullName: 'Piotr Zieliński',
@@ -42,6 +48,8 @@ export const USERS: readonly AppUser[] = [
     roles: ['manager'],
     email: 'piotr.zielinski@kompas.demo',
     avatarUrl: '/avatars/piotr-zielinski.png',
+    login: 'piotr',
+    password: 'piotr',
   },
   {
     id: 'u-marta',
@@ -50,6 +58,8 @@ export const USERS: readonly AppUser[] = [
     orgUnitId: 'bdg-wk',
     roles: ['hr'],
     email: 'marta.wisniewska@kompas.demo',
+    login: 'marta',
+    password: 'marta',
   },
   {
     id: 'u-ewa-mazur',
@@ -58,6 +68,8 @@ export const USERS: readonly AppUser[] = [
     orgUnitId: 'dsi-wwi',
     roles: ['manager'],
     email: 'ewa.mazur@kompas.demo',
+    login: 'ewa.mazur',
+    password: 'ewa',
   },
   {
     id: 'u-karolina',
@@ -66,6 +78,8 @@ export const USERS: readonly AppUser[] = [
     orgUnitId: 'dwm',
     roles: ['manager'],
     email: 'karolina.sowa@kompas.demo',
+    login: 'karolina',
+    password: 'karolina',
   },
   {
     id: 'u-tomasz',
@@ -74,6 +88,8 @@ export const USERS: readonly AppUser[] = [
     orgUnitId: 'bdg-wop',
     roles: ['manager'],
     email: 'tomasz.lis@kompas.demo',
+    login: 'tomasz',
+    password: 'tomasz',
   },
   {
     id: 'u-adam',
@@ -82,8 +98,25 @@ export const USERS: readonly AppUser[] = [
     orgUnitId: 'dc',
     roles: ['manager'],
     email: 'adam.sikora@kompas.demo',
+    login: 'adam',
+    password: 'adam',
   },
 ];
+
+export function publicUser(user: SeedUser | AppUser): AppUser & { login?: string } {
+  const { id, fullName, jobTitle, orgUnitId, roles, email, avatarUrl } = user;
+  const login = 'login' in user ? user.login : undefined;
+  return {
+    id,
+    fullName,
+    jobTitle,
+    orgUnitId,
+    roles,
+    email,
+    ...(avatarUrl ? { avatarUrl } : {}),
+    ...(login ? { login } : {}),
+  };
+}
 
 export const EMPLOYEES: readonly Employee[] = [
   {

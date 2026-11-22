@@ -5,13 +5,19 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { MockDb } from '../src/app/mock-backend/db';
+import {
+  isPublicAuthPath,
+  registerAuthRoutes,
+  resolveMockUser,
+  userIdFromAuthorization,
+} from '../src/app/mock-backend/handlers/auth.handlers';
 import { registerCaseRoutes } from '../src/app/mock-backend/handlers/case.handlers';
 import { registerKnowledgeRoutes } from '../src/app/mock-backend/handlers/knowledge.handlers';
 import { registerNotificationRoutes } from '../src/app/mock-backend/handlers/notification.handlers';
 import { registerPeopleRoutes } from '../src/app/mock-backend/handlers/people.handlers';
 import { registerRecruitmentRoutes } from '../src/app/mock-backend/handlers/recruitment.handlers';
 import { registerSessionRoutes } from '../src/app/mock-backend/handlers/session.handlers';
-import { MockHttpError } from '../src/app/mock-backend/http';
+import { MockHttpError, unauthorized } from '../src/app/mock-backend/http';
 import { MockRouter } from '../src/app/mock-backend/router';
 
 interface Step {
@@ -25,6 +31,7 @@ const [flowPath, outPath] = process.argv.slice(2);
 if (!flowPath || !outPath) throw new Error('Usage: parity-trace <flow.json> <expected.json>');
 
 const router = new MockRouter();
+registerAuthRoutes(router);
 registerSessionRoutes(router);
 registerKnowledgeRoutes(router);
 registerCaseRoutes(router);
@@ -41,21 +48,41 @@ const pick = (value: unknown, path: string): unknown =>
     return current && typeof current === 'object' ? (current as Record<string, unknown>)[key] : undefined;
   }, value);
 
-const steps = JSON.parse(readFileSync(flowPath, 'utf-8')) as Step[];
-const results = steps.map((step) => {
-  const url = new URL(fill(step.p), 'http://kompas.mock');
-  const body = step.b === undefined ? null : JSON.parse(fill(JSON.stringify(step.b)));
-  const match = router.match(step.m, url.pathname);
-  if (!match) return { status: 404, body: { code: 'not-found', message: `Brak endpointu ${step.m} ${url.pathname}.` } };
+function run(method: string, pathWithQuery: string, body: unknown, authorization: string | null) {
+  const url = new URL(pathWithQuery, 'http://kompas.mock');
+  const match = router.match(method, url.pathname);
+  if (!match) return { status: 404, body: { code: 'not-found', message: `Brak endpointu ${method} ${url.pathname}.` } };
   try {
-    const result = match.handler({ params: match.params, query: url.searchParams, body, db, user: db.sessionUser() });
+    if (!isPublicAuthPath(method, url.pathname) && !userIdFromAuthorization(authorization)) {
+      throw unauthorized();
+    }
+    const user = isPublicAuthPath(method, url.pathname)
+      ? db.sessionUser()
+      : resolveMockUser(db, authorization);
+    const result = match.handler({ params: match.params, query: url.searchParams, body, db, user });
     const json = result === undefined ? null : structuredClone(result);
-    for (const [name, path] of Object.entries(step.save ?? {})) vars[name] = pick(json, path);
     return { status: 200, body: json };
   } catch (error) {
     if (error instanceof MockHttpError) return { status: error.status, body: error.body };
     throw error;
   }
+}
+
+const boot = run('POST', '/auth/login', { login: 'piotr', password: 'piotr' }, null);
+if (boot.status !== 200) throw new Error('Nie udało się zalogować Piotra na start śladu.');
+let token = String((boot.body as { token: string }).token);
+
+const steps = JSON.parse(readFileSync(flowPath, 'utf-8')) as Step[];
+const results = steps.map((step) => {
+  const body = step.b === undefined ? null : JSON.parse(fill(JSON.stringify(step.b)));
+  const result = run(step.m, fill(step.p), body, `Bearer ${token}`);
+  if (step.p === '/auth/login' && result.status === 200 && result.body && typeof result.body === 'object') {
+    token = String((result.body as { token: string }).token);
+  }
+  if (result.status === 200) {
+    for (const [name, path] of Object.entries(step.save ?? {})) vars[name] = pick(result.body, path);
+  }
+  return result;
 });
 
 writeFileSync(outPath, `${JSON.stringify(results, null, 1)}\n`, 'utf-8');

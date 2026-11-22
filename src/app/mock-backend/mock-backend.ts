@@ -2,17 +2,19 @@ import { HttpErrorResponse, HttpResponse, type HttpEvent, type HttpRequest } fro
 import { environment } from '@env/environment';
 import { mergeMap, of, throwError, timer, type Observable } from 'rxjs';
 import { MockDb } from './db';
+import { isPublicAuthPath, registerAuthRoutes, resolveMockUser, userIdFromAuthorization } from './handlers/auth.handlers';
 import { registerCaseRoutes } from './handlers/case.handlers';
 import { registerKnowledgeRoutes } from './handlers/knowledge.handlers';
 import { registerNotificationRoutes } from './handlers/notification.handlers';
 import { registerPeopleRoutes } from './handlers/people.handlers';
 import { registerRecruitmentRoutes } from './handlers/recruitment.handlers';
 import { registerSessionRoutes } from './handlers/session.handlers';
-import { MockHttpError } from './http';
+import { MockHttpError, unauthorized } from './http';
 import { MockRouter, type RouteMatch } from './router';
 
 const STATUS_TEXT: Readonly<Record<number, string>> = {
   400: 'Bad Request',
+  401: 'Unauthorized',
   403: 'Forbidden',
   404: 'Not Found',
   409: 'Conflict',
@@ -36,6 +38,7 @@ export class MockBackend {
     private readonly latency: readonly [number, number],
     private readonly aiLatency: readonly [number, number],
   ) {
+    registerAuthRoutes(this.router);
     registerSessionRoutes(this.router);
     registerKnowledgeRoutes(this.router);
     registerCaseRoutes(this.router);
@@ -62,12 +65,19 @@ export class MockBackend {
       return this.error(request, new MockHttpError(404, { code: 'not-found', message: `Brak endpointu ${request.method} ${path}.` }));
     }
     try {
+      const authorization = request.headers.get('Authorization');
+      if (!isPublicAuthPath(request.method, path) && !userIdFromAuthorization(authorization)) {
+        throw unauthorized();
+      }
+      const user = isPublicAuthPath(request.method, path)
+        ? this.db.sessionUser()
+        : resolveMockUser(this.db, authorization);
       const body = match.handler({
         params: match.params,
         query,
         body: request.body === null ? null : structuredClone(request.body),
         db: this.db,
-        user: this.db.sessionUser(),
+        user,
       });
       return of(new HttpResponse({ status: 200, statusText: 'OK', url: request.url, body: body === undefined ? null : structuredClone(body) }));
     } catch (error) {

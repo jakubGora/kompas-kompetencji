@@ -1,0 +1,124 @@
+.kp-login {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.25rem;
+  background:
+    radial-gradient(120% 80% at 10% 0%, var(--kp-violet-150), transparent 55%),
+    radial-gradient(90% 70% at 100% 20%, var(--kp-violet-100), transparent 50%),
+    var(--kp-color-bg);
+}
+
+.kp-login__panel {
+  width: min(100%, 26rem);
+  padding: 2rem 1.75rem 1.75rem;
+  border-radius: 1rem;
+  background: var(--kp-color-surface);
+  box-shadow: 0 18px 40px rgb(46 16 96 / 8%);
+  border: 1px solid var(--kp-neutral-200);
+}
+
+.kp-login__logo {
+  display: block;
+  margin-bottom: 1.25rem;
+}
+
+.kp-login__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  color: var(--kp-neutral-900);
+}
+
+.kp-login__lead {
+  margin: 0.4rem 0 1.25rem;
+  color: var(--kp-neutral-600);
+  line-height: 1.45;
+}
+
+.kp-login__form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.kp-login__field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--kp-neutral-700);
+
+  input {
+    border: 1px solid var(--kp-neutral-300);
+    border-radius: 0.55rem;
+    padding: 0.7rem 0.8rem;
+    font: inherit;
+    color: var(--kp-neutral-900);
+    background: var(--kp-color-surface);
+
+    &:focus {
+      outline: 2px solid var(--kp-violet-300);
+      outline-offset: 1px;
+      border-color: var(--kp-violet-500);
+    }
+  }
+}
+
+.kp-login__error {
+  margin: 0;
+  color: #9f1239;
+  font-size: 0.875rem;
+}
+
+.kp-login__accounts {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--kp-neutral-200);
+}
+
+.kp-login__accounts-label {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  color: var(--kp-neutral-550);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kp-login__accounts ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.kp-login__account {
+  width: 100%;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  text-align: left;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 0.65rem;
+  background: var(--kp-color-surface-muted);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--kp-violet-200);
+    background: var(--kp-violet-50);
+  }
+
+  strong {
+    display: block;
+    font-size: 0.92rem;
+  }
+}
+
+.kp-login__account-meta {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--kp-neutral-550);
+}

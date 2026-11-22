@@ -17,10 +17,6 @@ export class SessionApi {
     return this.http.get<DemoInfo>(`${this.base}/demo`);
   }
 
-  switchUser(userId: string): Observable<SessionInfo> {
-    return this.http.post<SessionInfo>(`${this.base}/demo/session`, { userId });
-  }
-
   loadScenario(scenarioId: string): Observable<{ landing: string }> {
     return this.http.post<{ landing: string }>(`${this.base}/demo/scenario`, { scenarioId });
   }

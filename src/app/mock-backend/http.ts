@@ -21,3 +21,6 @@ export const conflict = (message: string) => new MockHttpError(409, { code: 'con
 
 export const unprocessable = (message: string, issues: readonly string[] = []) =>
   new MockHttpError(422, { code: 'validation', message, issues });
+
+export const unauthorized = (message = 'Wymagane logowanie.') =>
+  new MockHttpError(401, { code: 'unauthorized', message });

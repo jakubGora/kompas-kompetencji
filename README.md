@@ -4,6 +4,21 @@ Angular 22. Prowadzi kierownika przez pierwszą ocenę i ocenę okresową w słu
 z asystentem AI odpowiadającym na podstawie źródeł. Backend: [kk_rag](https://github.com/magdalenasztuk/kk_rag)
 (FastAPI + RAG + Claude).
 
+**Produkcja:** https://kompas-kompetencji.vercel.app
+
+## Konta demonstracyjne (dla jury)
+
+Wszystkie ścieżki API (w tym asystent AI) wymagają logowania.
+
+| Rola | Login | Hasło |
+|------|-------|-------|
+| Kierownik (główne demo) | `piotr` | `piotr` |
+| Kadry / HR | `marta` | `marta` |
+| Kierownik | `ewa.mazur` | `ewa` |
+| Kierownik | `karolina` | `karolina` |
+| Kierownik | `tomasz` | `tomasz` |
+| Kierownik | `adam` | `adam` |
+
 ## Uruchomienie
 
 ```bash
@@ -12,8 +27,8 @@ npm start            # http://127.0.0.1:4300, /api → backend na http://127.0.0
 npm start -- -c mock # bez backendu: dane demo i asystent offline w przeglądarce (localStorage)
 ```
 
-Każda przeglądarka dostaje własną przestrzeń roboczą danych demo (nagłówek `X-Kompas-Workspace`,
-id w localStorage `kompas.workspace`) — usunięcie klucza zaczyna demo od nowa.
+Po starcie otwiera się `/logowanie`. Każda przeglądarka dostaje własną przestrzeń roboczą danych demo
+(nagłówek `X-Kompas-Workspace`, id w localStorage `kompas.workspace`).
 
 ## Build i wdrożenie
 
