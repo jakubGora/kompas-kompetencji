@@ -1,49 +1,48 @@
-# Kompas Kompetencji — front
+# Kompas Kompetencji
 
-Angular 22. Prowadzi kierownika przez pierwszą ocenę i ocenę okresową w służbie cywilnej krok po kroku,
-z asystentem AI odpowiadającym na podstawie źródeł. Backend: [kk_rag](https://github.com/magdalenasztuk/kk_rag)
-(FastAPI + RAG + Claude).
+Aplikacja do prowadzenia pierwszej oceny i oceny okresowej w służbie cywilnej.
+Kierownik przechodzi proces krok po kroku (stanowisko i OSP, kryteria, rozmowa wstępna,
+obserwacje, rozmowa oceniająca, oceny cząstkowe, arkusz). Kadry widzą przebieg procesów,
+terminy i przypomnienia. Asystent odpowiada na pytania o procedurę wyłącznie na podstawie
+źródeł prawnych i poradników, z cytatami.
 
-**Produkcja:** https://kompas-kompetencji.vercel.app
+Backend API: [kk_rag](https://github.com/magdalenasztuk/kk_rag).
 
-## Konta demonstracyjne (dla jury)
+## Produkcja (Vercel)
 
-Wszystkie ścieżki API (w tym asystent AI) wymagają logowania.
+| | Adres |
+|---|---|
+| Aplikacja | https://kompas-kompetencji.vercel.app |
+| API | https://kompas-kompetencji-api.vercel.app |
+
+Front na Vercelu przekierowuje `/api/*` na backend (`vercel.json`). Dane demo są we
+wspólnej przestrzeni `default` (Postgres) — zmiany widać na wszystkich stanowiskach.
+
+## Konta demonstracyjne
+
+Logowanie: https://kompas-kompetencji.vercel.app/logowanie
 
 | Rola | Login | Hasło |
 |------|-------|-------|
-| Oceniający | `piotr` | `piotr` |
-| Kadry / HR | `marta` | `marta` |
+| Oceniający (Piotr Zieliński) | `piotr` | `piotr` |
+| Kadry / HR (Marta Wiśniewska) | `marta` | `marta` |
 
-## Uruchomienie
+W menu konta jest **Przywróć dane startowe** — wraca do zestawu demonstracyjnego
+(pracownicy i oceny seedowe).
+
+## Uruchomienie lokalne
 
 ```bash
 npm install
-npm start            # http://127.0.0.1:4300, /api → backend na http://127.0.0.1:8000 (proxy.conf.json)
-npm start -- -c mock # bez backendu: dane demo i asystent offline w przeglądarce (localStorage)
+npm start            # http://127.0.0.1:4300 — proxy /api → lokalny backend :8000
+npm start -- -c mock # bez backendu: dane i asystent w przeglądarce (localStorage)
 ```
 
-Po starcie otwiera się `/logowanie`. Każda przeglądarka dostaje własną przestrzeń roboczą danych demo
-(nagłówek `X-Kompas-Workspace`, id w localStorage `kompas.workspace`).
+Backend lokalnie: zobacz README w `kk_rag` (`uvicorn` na porcie 8000).
 
-## Build i wdrożenie
+## Build
 
 ```bash
-npm run build                 # produkcja: prawdziwy backend pod /api
+npm run build                 # produkcja (API przez /api)
 npx ng build -c mock          # statyczne demo bez backendu
-```
-
-Na Vercelu `vercel.json` przekierowuje `/api/:path*` na projekt backendu
-(`https://kompas-kompetencji-api.vercel.app`) — przy innej domenie backendu zmień ten adres.
-
-## Zgodność z backendem
-
-`npm run parity:trace -- <flow.json> <expected.json>` odtwarza scenariusz żądań na backendzie
-demonstracyjnym frontu; backend porównuje z nim swoje odpowiedzi (`kk_rag/tests/test_parity.py`).
-
-## Testy i lint
-
-```bash
-npx ng test
-npx ng lint
 ```

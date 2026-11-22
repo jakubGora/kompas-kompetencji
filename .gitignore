@@ -54,3 +54,6 @@ Thumbs.db
 .vercel
 .tmp/
 .env*
+
+# Lokalne notatki / szkice (nie do repo)
+/docs/
